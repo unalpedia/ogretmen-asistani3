@@ -1,110 +1,152 @@
-<div id="gelisim-karnesi-v12-fixed" style="background:#fff; border-radius:15px; overflow:hidden; border:1px solid #e0e6ed; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-    
-    <div style="display: flex; background: #2c3e50; color: white; padding: 25px; align-items: center; justify-content: space-between;">
-        <div style="flex: 1;">
-            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">GÜNCEL SKOR</span>
-            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 5px;">
-                <span id="v12-puan-ana" style="font-size: 32px; font-weight: 900;">--</span>
-                <span id="v12-delta-kutusu" style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: rgba(255,255,255,0.1);">--</span>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* v12.4 ANA TASARIM DİSİPLİNİ */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .rapor-sayfasi { max-width: 950px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        
+        /* YENİ PERFORMANS SKALASI (ÜST PANEL) */
+        .performans-skalasi { 
+            display: flex; 
+            background: #1a2a3a; 
+            color: white; 
+            padding: 30px; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .skala-item { text-align: center; flex: 1; }
+        .skala-baslik { font-size: 11px; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+        .skala-deger { font-size: 32px; font-weight: 900; margin-top: 5px; }
+        .delta-kutusu { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
+
+        /* AYRI SÜTUNLU GELİŞİM TABLOSU */
+        .tablo-alani { padding: 25px; }
+        .v12-tablo { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .v12-tablo th { 
+            text-align: left; 
+            padding: 15px; 
+            background: #f8fafc; 
+            color: #64748b; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            border-bottom: 2px solid #edf2f7;
+        }
+        .v12-tablo td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
+        .puan-sutun { font-weight: 800; color: #2563eb; text-align: center; }
+        .net-sutun { color: #64748b; text-align: center; }
+        .trend-sutun { text-align: center; font-size: 20px; }
+        
+        /* TREND RENKLERİ */
+        .bg-yukselis { background: #10b981; color: white; }
+        .bg-dusus { background: #ef4444; color: white; }
+        .bg-stabil { background: #f59e0b; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="rapor-sayfasi">
+    <div class="performans-skalasi">
+        <div class="skala-item" style="text-align: left;">
+            <div class="skala-baslik">GÜNCEL SONUÇ</div>
+            <div class="skala-deger">
+                <span id="ana-puan">--</span>
+                <span id="ana-delta" class="delta-kutusu">--</span>
             </div>
         </div>
-
-        <div style="flex: 1.2; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">SON 5 TREND</span>
-            <div id="v12-badges-ana" style="font-size: 22px; margin-top: 8px; letter-spacing: 4px;">--</div>
+        
+        <div class="skala-item" style="border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+            <div class="skala-baslik">SON 5 TREND (FORM)</div>
+            <div id="ana-badges" style="margin-top:10px; letter-spacing: 5px;">--</div>
         </div>
 
-        <div style="flex: 1; text-align: right;">
-            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">5'Lİ ORTALAMA</span>
-            <div id="v12-ort-ana" style="font-size: 32px; font-weight: 900; color: #1dd1a1;">--</div>
+        <div class="skala-item" style="text-align: right;">
+            <div class="skala-baslik">HAREKETLİ ORTALAMA</div>
+            <div id="ana-ortalama" class="skala-deger" style="color: #10b981;">--</div>
         </div>
     </div>
 
-    <div style="padding: 20px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+    <div class="tablo-alani">
+        <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 18px;">Gelişim Karnesi Detayları</h3>
+        <table class="v12-tablo">
             <thead>
-                <tr style="border-bottom: 2px solid #f1f5f9;">
-                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Deneme Adı</th>
-                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Puan</th>
-                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Net</th>
-                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Trend (±%5)</th>
+                <tr>
+                    <th>Deneme Tanımı</th>
+                    <th style="text-align: center;">Puan</th>
+                    <th style="text-align: center;">Net</th>
+                    <th style="text-align: center;">Trend (±%5)</th>
                 </tr>
             </thead>
-            <tbody id="v12-table-govdesi">
+            <tbody id="v12-liste">
                 </tbody>
         </table>
     </div>
 </div>
 
 <script>
-/**
- * ÖĞRETMEN ASİSTAN PRO v12.4 - Gelişim Karnesi Entegrasyonu
- * @param {Array} ogrenciSinavlari - Öğrencinin sınav listesi
- */
-function renderV12Makyaj(ogrenciSinavlari) {
-    const tableBody = document.getElementById('v12-table-govdesi');
-    let toplamBes = 0;
-    let badgeMetni = "";
-    
-    tableBody.innerHTML = ""; // Mevcut tabloyu temizle
-
-    ogrenciSinavlari.forEach((sinav, i) => {
-        let ikon = "⚪"; // Başlangıç/Veri yok
+    // ÖĞRETMEN ASİSTAN PRO v12.4 VERİ ENTEGRASYONU
+    function raporuOlustur(veriler) {
+        const liste = document.getElementById('v12-liste');
+        let toplamPuan = 0;
+        let formIkonlari = "";
         
-        // %5 Trend Hesaplama Mantığı
-        if (ogrenciSinavlari[i+1]) {
-            const oran = ((sinav.puan - ogrenciSinavlari[i+1].puan) / ogrenciSinavlari[i+1].puan) * 100;
-            if (oran > 5) ikon = "🟢";
-            else if (oran < -5) ikon = "🔴";
-            else ikon = "🟡";
-        }
+        liste.innerHTML = ""; 
 
-        // Tabloyu sevdiğin "Ayrı Sütun" formatında doldur
-        tableBody.innerHTML += `
-            <tr style="border-bottom: 1px solid #f8fafc;">
-                <td style="padding: 15px 12px; font-weight: 600; color: #2d3436;">${sinav.ad}</td>
-                <td style="padding: 15px 12px; text-align: center; font-weight: 800; color: #2ecc71;">${sinav.puan}</td>
-                <td style="padding: 15px 12px; text-align: center; color: #636e72;">${sinav.net}</td>
-                <td style="padding: 15px 12px; text-align: center; font-size: 18px;">${ikon}</td>
-            </tr>
-        `;
+        veriler.forEach((sinav, i) => {
+            let trend = "🟡";
+            // %5 KURALI HESAPLAMA
+            if (veriler[i+1]) {
+                const degisim = ((sinav.puan - veriler[i+1].puan) / veriler[i+1].puan) * 100;
+                if (degisim > 5) trend = "🟢";
+                else if (degisim < -5) trend = "🔴";
+            }
 
-        if (i < 5) {
-            toplamBes += sinav.puan;
-            badgeMetni += ikon;
-        }
-    });
+            // AYRI SÜTUNLU TABLO SATIRI
+            liste.innerHTML += `
+                <tr>
+                    <td style="font-weight: 600;">${sinav.ad}</td>
+                    <td class="puan-sutun">${sinav.puan}</td>
+                    <td class="net-sutun">${sinav.net} Net</td>
+                    <td class="trend-sutun">${trend}</td>
+                </tr>
+            `;
 
-    // Üst Panel Detayları
-    const sonSinav = ogrenciSinavlari[0];
-    const oncekiSinav = ogrenciSinavlari[1] || sonSinav;
-    const yuzdeDegisim = (((sonSinav.puan - oncekiSinav.puan) / oncekiSinav.puan) * 100).toFixed(1);
+            // ÜST PANEL İÇİN SON 5 VERİSİ
+            if (i < 5) {
+                toplamPuan += sinav.puan;
+                formIkonlari += trend;
+            }
+        });
 
-    document.getElementById('v12-puan-ana').innerText = sonSinav.puan;
-    document.getElementById('v12-ort-ana').innerText = (toplamBes / Math.min(ogrenciSinavlari.length, 5)).toFixed(1);
-    document.getElementById('v12-badges-ana').innerText = badgeMetni;
+        // ÜST PANEL GÜNCELLEME
+        const son = veriler[0];
+        const onceki = veriler[1] || son;
+        const farkYuzde = (((son.puan - onceki.puan) / onceki.puan) * 100).toFixed(1);
 
-    // Delta Renk Ayarı (%5 kuralı)
-    const deltaKutu = document.getElementById('v12-delta-kutusu');
-    deltaKutu.innerText = (yuzdeDegisim > 0 ? "+" : "") + yuzdeDegisim + "%";
-    
-    if (Math.abs(yuzdeDegisim) <= 5) {
-        deltaKutu.style.background = "#f39c12"; // Sarımtırak (Stabil)
-    } else if (yuzdeDegisim > 5) {
-        deltaKutu.style.background = "#27ae60"; // Yeşil (Yükseliş)
-    } else {
-        deltaKutu.style.background = "#e74c3c"; // Kırmızı (Düşüş)
+        document.getElementById('ana-puan').innerText = son.puan;
+        document.getElementById('ana-ortalama').innerText = (toplamPuan / Math.min(veriler.length, 5)).toFixed(1);
+        document.getElementById('ana-badges').innerText = formIkonlari;
+
+        const deltaKutu = document.getElementById('ana-delta');
+        deltaKutu.innerText = (farkYuzde > 0 ? "+" : "") + farkYuzde + "%";
+        
+        // RENK MANTIĞI
+        if (Math.abs(farkYuzde) <= 5) deltaKutu.className = "delta-kutusu bg-stabil";
+        else if (farkYuzde > 5) deltaKutu.className = "delta-kutusu bg-yukselis";
+        else deltaKutu.className = "delta-kutusu bg-dusus";
     }
-}
 
-// TEST: Asistan Pro'dan veri geldiğini varsayıyoruz
-const v12TestVerisi = [
-    { ad: "Türkiye Geneli - 5", puan: 92, net: 76 },
-    { ad: "Branş Denemesi - 4", puan: 85, net: 69 },
-    { ad: "Okul Sınavı - 3", puan: 86, net: 70 },
-    { ad: "Tarama Sınavı - 2", puan: 80, net: 62 },
-    { ad: "Seviye Tespit - 1", puan: 74, net: 58 }
-];
-
-renderV12Makyaj(v12TestVerisi);
+    // TEST VERİSİ
+    const ornekVeri = [
+        { ad: "Final Denemesi A", puan: 94, net: 78 },
+        { ad: "Tarama Sınavı 4", puan: 85, net: 69 },
+        { ad: "Türkiye Geneli 2", puan: 86, net: 70 },
+        { ad: "Kurum Denemesi 1", puan: 80, net: 62 },
+        { ad: "Hazırlık Sınavı", puan: 72, net: 55 }
+    ];
+    raporuOlustur(ornekVeri);
 </script>
+
+</body>
+</html>
