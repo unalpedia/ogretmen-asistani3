@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistan Pro V12.7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; margin: 0; }
+        .login-card { background: white; padding: 2.5rem; border-radius: 2rem; shadow: 20px 20px 60px #d1d9e6; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            // Kullanıcı Oturumu
+            const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('asistan_user') || 'null'));
+            const [pin, setPin] = useState("");
+            
+            // Sayfa ve Veri Durumu
+            const [page, setPage] = useState('dashboard');
+            const [classes, setClasses] = useState(() => JSON.parse(localStorage.getItem('asistan_classes') || '[]'));
+            const [activeClass, setActiveClass] = useState(null);
+            const [students, setStudents] = useState([]);
+
+            // Verileri Kaydet
+            useEffect(() => {
+                localStorage.setItem('asistan_classes', JSON.stringify(classes));
+                if(user) localStorage.setItem('asistan_user', JSON.stringify(user));
+                else localStorage.removeItem('asistan_user');
+            }, [classes, user]);
+
+            // Sınıf seçildiğinde öğrencileri yükle
+            useEffect(() => {
+                if (activeClass) {
+                    const savedStudents = localStorage.getItem(`students_${activeClass.id}`);
+                    setStudents(savedStudents ? JSON.parse(savedStudents) : []);
+                }
+            }, [activeClass]);
+
+            const login = (e) => {
+                e.preventDefault();
+                if(pin.length >= 4) {
+                    setUser({ id: pin });
+                    setPin("");
+                }
+            };
+
+            const addClass = () => {
+                const name = prompt("Sınıf Adı:");
+                if(name) setClasses([...classes, { id: Date.now(), name, owner: user.id }]);
+            };
+
+            const addStudent = () => {
+                const name = prompt("Öğrenci Adı:");
+                if(name) {
+                    const newStds = [...students, { id: Date.now(), name, puan: 0 }];
+                    setStudents(newStds);
+                    localStorage.setItem(`students_${activeClass.id}`, JSON.stringify(newStds));
+                }
+            };
+
+            // GİRİŞ EKRANI
+            if (!user) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
+                        <div className="bg-white p-10 rounded-[2.5rem] w-full max-w-sm shadow-2xl">
+                            <h2 className="text-3xl font-black text-center mb-6 italic text-slate-800 uppercase">Giriş Yap</h2>
+                            <form onSubmit={login} className="space-y-4">
+                                <input 
+                                    type="password" 
+                                    placeholder="4 Haneli PIN" 
+                                    className="w-full p-4 bg-slate-100 rounded-2xl text-center text-2xl font-bold outline-none border-2 border-transparent focus:border-indigo-500"
+                                    value={pin}
+                                    onChange={(e) => setPin(e.target.value)}
+                                />
+                                <button className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black uppercase shadow-lg hover:bg-indigo-500 transition-all">Sisteme Gir</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            // ANA EKRAN
+            return (
+                <div className="min-h-screen">
+                    <nav className="bg-white border-b p-5 flex justify-between items-center shadow-sm">
+                        <h1 className="font-black text-xl italic cursor-pointer" onClick={() => setActiveClass(null)}>Asistan <span className="text-indigo-600">PRO</span></h1>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs font-bold text-slate-400">HOCA: {user.id}</span>
+                            <button onClick={() => setUser(null)} className="text-[10px] font-black bg-rose-50 text-rose-600 px-3 py-1 rounded-lg uppercase">Çıkış</button>
+                        </div>
+                    </nav>
+
+                    <main className="p-6 max-w-6xl mx-auto">
+                        {!activeClass ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
+                                <button onClick={addClass} className="h-40 border-4 border-dashed rounded-[2rem] text-slate-400 font-bold hover:text-indigo-600 hover:border-indigo-300 transition-all">
+                                    + Yeni Sınıf Oluştur
+                                </button>
+                                {classes.filter(c => c.owner === user.id).map(c => (
+                                    <div key={c.id} onClick={() => setActiveClass(c)} className="bg-white p-8 rounded-[2rem] shadow-md border-b-4 border-indigo-600 cursor-pointer hover:-translate-y-1 transition-all">
+                                        <h3 className="text-2xl font-black uppercase italic text-slate-700">{c.name}</h3>
+                                        <p className="text-[10px] text-slate-300 mt-2 font-bold uppercase">Sınıfı Yönet</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white p-8 rounded-[2rem] shadow-xl">
+                                <div className="flex justify-between items-center mb-8 border-b pb-4">
+                                    <h2 className="text-2xl font-black uppercase italic">{activeClass.name} Listesi</h2>
+                                    <button onClick={addStudent} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-sm">+ Öğrenci Ekle</button>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {students.map(s => (
+                                        <div key={s.id} className="p-4 bg-slate-50 rounded-xl border font-bold flex justify-between items-center">
+                                            <span>{s.name}</span>
+                                            <span className="text-indigo-600">{s.puan}</span>
+                                        </div>
+                                    ))}
+                                    {students.length === 0 && <p className="col-span-full text-center text-slate-400 py-10 font-bold uppercase italic">Sınıfta henüz öğrenci yok.</p>}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
