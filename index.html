@@ -1,37 +1,36 @@
-<div id="student-detail-v12-4" style="background:#fcfcfc; border-radius:12px; padding:20px; font-family:'Inter', system-ui, sans-serif;">
+<div id="gelisim-karnesi-v12-fixed" style="background:#fff; border-radius:15px; overflow:hidden; border:1px solid #e0e6ed; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
     
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-        
-        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Güncel Skor</div>
-            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 5px;">
-                <span id="v12-last-puan" style="font-size: 28px; font-weight: 800; color: #2d3436;">--</span>
-                <span id="v12-delta" style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">--</span>
+    <div style="display: flex; background: #2c3e50; color: white; padding: 25px; align-items: center; justify-content: space-between;">
+        <div style="flex: 1;">
+            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">GÜNCEL SKOR</span>
+            <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 5px;">
+                <span id="v12-puan-ana" style="font-size: 32px; font-weight: 900;">--</span>
+                <span id="v12-delta-kutusu" style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 5px; background: rgba(255,255,255,0.1);">--</span>
             </div>
         </div>
 
-        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: center;">
-            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Son 5 Deneme Trendi</div>
-            <div id="v12-badges" style="font-size: 22px; margin-top: 8px; letter-spacing: 3px;">--</div>
+        <div style="flex: 1.2; text-align: center; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">SON 5 TREND</span>
+            <div id="v12-badges-ana" style="font-size: 22px; margin-top: 8px; letter-spacing: 4px;">--</div>
         </div>
 
-        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: right;">
-            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Son 5 Ortalama</div>
-            <div id="v12-average" style="font-size: 28px; font-weight: 800; color: #2d3436; margin-top: 5px;">--</div>
+        <div style="flex: 1; text-align: right;">
+            <span style="font-size: 11px; font-weight: 700; opacity: 0.7; letter-spacing: 1px;">5'Lİ ORTALAMA</span>
+            <div id="v12-ort-ana" style="font-size: 32px; font-weight: 900; color: #1dd1a1;">--</div>
         </div>
     </div>
 
-    <div style="background: white; border-radius: 10px; border: 1px solid #eaeaea; overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+    <div style="padding: 20px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
             <thead>
-                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
-                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Deneme Adı</th>
-                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Puan</th>
-                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Net</th>
-                    <th style="padding: 15px; color: #636e72; font-weight: 600; text-align: center;">Trend (±%5)</th>
+                <tr style="border-bottom: 2px solid #f1f5f9;">
+                    <th style="padding: 12px; text-align: left; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Deneme Adı</th>
+                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Puan</th>
+                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Net</th>
+                    <th style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px; text-transform: uppercase;">Trend (±%5)</th>
                 </tr>
             </thead>
-            <tbody id="v12-table-rows">
+            <tbody id="v12-table-govdesi">
                 </tbody>
         </table>
     </div>
@@ -39,79 +38,73 @@
 
 <script>
 /**
- * Öğretmen Asistan Pro v12.4 Entegrasyon Fonksiyonu
- * @param {Array} exams - Öğrenci deneme verileri dizisi
+ * ÖĞRETMEN ASİSTAN PRO v12.4 - Gelişim Karnesi Entegrasyonu
+ * @param {Array} ogrenciSinavlari - Öğrencinin sınav listesi
  */
-function updateStudentView(exams) {
-    const tableBody = document.getElementById('v12-table-rows');
-    const badgeContainer = document.getElementById('v12-badges');
-    let totalScore = 0;
-    let badgeHTML = "";
+function renderV12Makyaj(ogrenciSinavlari) {
+    const tableBody = document.getElementById('v12-table-govdesi');
+    let toplamBes = 0;
+    let badgeMetni = "";
     
-    // Tabloyu temizle
-    tableBody.innerHTML = "";
+    tableBody.innerHTML = ""; // Mevcut tabloyu temizle
 
-    exams.forEach((exam, i) => {
-        let trendIcon = "⚪"; 
+    ogrenciSinavlari.forEach((sinav, i) => {
+        let ikon = "⚪"; // Başlangıç/Veri yok
         
-        // Bir önceki deneme ile kıyaslama (%5 kuralı)
-        if (exams[i + 1]) {
-            const current = exam.puan;
-            const previous = exams[i + 1].puan;
-            const diffPercent = ((current - previous) / previous) * 100;
-
-            if (diffPercent > 5) trendIcon = "🟢";
-            else if (diffPercent < -5) trendIcon = "🔴";
-            else trendIcon = "🟡";
+        // %5 Trend Hesaplama Mantığı
+        if (ogrenciSinavlari[i+1]) {
+            const oran = ((sinav.puan - ogrenciSinavlari[i+1].puan) / ogrenciSinavlari[i+1].puan) * 100;
+            if (oran > 5) ikon = "🟢";
+            else if (oran < -5) ikon = "🔴";
+            else ikon = "🟡";
         }
 
-        // Tablo Satırı Oluştur (Ayrı Sütun Formatı)
+        // Tabloyu sevdiğin "Ayrı Sütun" formatında doldur
         tableBody.innerHTML += `
-            <tr style="border-bottom: 1px solid #f9f9f9;">
-                <td style="padding: 15px; font-weight: 600; color: #2d3436;">${exam.ad}</td>
-                <td style="padding: 15px; color: #0984e3; font-weight: 700;">${exam.puan}</td>
-                <td style="padding: 15px; color: #636e72;">${exam.net} Net</td>
-                <td style="padding: 15px; text-align: center; font-size: 18px;">${trendIcon}</td>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+                <td style="padding: 15px 12px; font-weight: 600; color: #2d3436;">${sinav.ad}</td>
+                <td style="padding: 15px 12px; text-align: center; font-weight: 800; color: #2ecc71;">${sinav.puan}</td>
+                <td style="padding: 15px 12px; text-align: center; color: #636e72;">${sinav.net}</td>
+                <td style="padding: 15px 12px; text-align: center; font-size: 18px;">${ikon}</td>
             </tr>
         `;
 
-        // Son 5 veri için özet hesaplamaları
         if (i < 5) {
-            totalScore += exam.puan;
-            badgeHTML += trendIcon;
+            toplamBes += sinav.puan;
+            badgeMetni += ikon;
         }
     });
 
-    // Üst Panel Verileri
-    const latest = exams[0];
-    const second = exams[1] || latest;
-    const delta = (((latest.puan - second.puan) / second.puan) * 100).toFixed(1);
-    
-    document.getElementById('v12-last-puan').innerText = latest.puan;
-    document.getElementById('v12-average').innerText = (totalScore / Math.min(exams.length, 5)).toFixed(1);
-    document.getElementById('v12-badges').innerHTML = badgeHTML;
+    // Üst Panel Detayları
+    const sonSinav = ogrenciSinavlari[0];
+    const oncekiSinav = ogrenciSinavlari[1] || sonSinav;
+    const yuzdeDegisim = (((sonSinav.puan - oncekiSinav.puan) / oncekiSinav.puan) * 100).toFixed(1);
 
-    // Delta Renklendirme
-    const deltaEl = document.getElementById('v12-delta');
-    deltaEl.innerText = (delta > 0 ? "+" : "") + delta + "%";
+    document.getElementById('v12-puan-ana').innerText = sonSinav.puan;
+    document.getElementById('v12-ort-ana').innerText = (toplamBes / Math.min(ogrenciSinavlari.length, 5)).toFixed(1);
+    document.getElementById('v12-badges-ana').innerText = badgeMetni;
+
+    // Delta Renk Ayarı (%5 kuralı)
+    const deltaKutu = document.getElementById('v12-delta-kutusu');
+    deltaKutu.innerText = (yuzdeDegisim > 0 ? "+" : "") + yuzdeDegisim + "%";
     
-    if (Math.abs(delta) <= 5) {
-        deltaEl.style.background = "#fff3e0"; deltaEl.style.color = "#e67e22"; // Sabit
-    } else if (delta > 5) {
-        deltaEl.style.background = "#e8f5e9"; deltaEl.style.color = "#2e7d32"; // Artış
+    if (Math.abs(yuzdeDegisim) <= 5) {
+        deltaKutu.style.background = "#f39c12"; // Sarımtırak (Stabil)
+    } else if (yuzdeDegisim > 5) {
+        deltaKutu.style.background = "#27ae60"; // Yeşil (Yükseliş)
     } else {
-        deltaEl.style.background = "#ffebee"; deltaEl.style.color = "#c62828"; // Düşüş
+        deltaKutu.style.background = "#e74c3c"; // Kırmızı (Düşüş)
     }
 }
 
-// TEST VERİSİ (Projeden gelen veriyi buraya bağlayın)
-const sampleExams = [
-    { ad: "Final Denemesi - 05", puan: 95, net: 78.5 },
-    { ad: "Genel Deneme - 04", puan: 82, net: 65.0 },
-    { ad: "Tarama Sınavı - 03", puan: 84, net: 67.5 },
-    { ad: "Başarı İzleme - 02", puan: 80, net: 64.0 },
-    { ad: "Seviye Tespit - 01", puan: 72, net: 55.5 }
+// TEST: Asistan Pro'dan veri geldiğini varsayıyoruz
+const v12TestVerisi = [
+    { ad: "Türkiye Geneli - 5", puan: 92, net: 76 },
+    { ad: "Branş Denemesi - 4", puan: 85, net: 69 },
+    { ad: "Okul Sınavı - 3", puan: 86, net: 70 },
+    { ad: "Tarama Sınavı - 2", puan: 80, net: 62 },
+    { ad: "Seviye Tespit - 1", puan: 74, net: 58 }
 ];
 
-updateStudentView(sampleExams);
+renderV12Makyaj(v12TestVerisi);
 </script>
