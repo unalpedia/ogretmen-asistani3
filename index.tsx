@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistan Pro V12.5 - Secure Edition</title>
+    <title>Asistan Pro V12.6 - Kararlı Güvenlik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
         .tab-btn { padding: 10px 16px; border-radius: 14px; font-weight: 800; font-size: 11px; transition: 0.3s; text-transform: uppercase; }
         .active-tab { background: #4338ca; color: white; }
-        .pin-input { width: 50px; height: 60px; text-align: center; font-size: 24px; font-weight: 800; border: 3px solid #e2e8f0; border-radius: 12px; margin: 0 5px; outline: none; transition: 0.3s; }
-        .pin-input:focus { border-color: #4338ca; background: #f8fafc; }
         .slot-animation { animation: flash 0.1s infinite; }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @media print { .no-print { display: none !important; } .print-only { display: block !important; } body { background: white; } }
+        /* Scrollbar güzelleştirme */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -25,7 +26,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- SES FONKSİYONU (KORUNDU) ---
+        // Ses Efekti (Kura için)
         const playRollSound = () => {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -42,8 +43,11 @@
 
         function App() {
             // AUTH STATES
-            const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('ap_user') || 'null'));
-            const [pin, setPin] = useState("");
+            const [currentUser, setCurrentUser] = useState(() => {
+                const saved = localStorage.getItem('ap_user');
+                return saved ? JSON.parse(saved) : null;
+            });
+            const [pinInput, setPinInput] = useState("");
 
             // APP STATES
             const [page, setPage] = useState('dashboard');
@@ -58,9 +62,14 @@
             const [currentFlashName, setCurrentFlashName] = useState("");
             const [detailStudent, setDetailStudent] = useState(null);
 
+            // LocalStorage Sync
             useEffect(() => { localStorage.setItem('ap_v12_cls', JSON.stringify(classes)); }, [classes]);
-            useEffect(() => { if(currentUser) localStorage.setItem('ap_user', JSON.stringify(currentUser)); else localStorage.removeItem('ap_user'); }, [currentUser]);
+            useEffect(() => { 
+                if(currentUser) localStorage.setItem('ap_user', JSON.stringify(currentUser));
+                else localStorage.removeItem('ap_user');
+            }, [currentUser]);
 
+            // Sınıf Değiştiğinde Verileri Getir
             useEffect(() => {
                 if (selClass) {
                     setStudents(JSON.parse(localStorage.getItem(`s12_${selClass.id}`) || '[]'));
@@ -69,14 +78,13 @@
                 }
             }, [selClass]);
 
-            // --- AUTH ACTIONS ---
             const handleLogin = (e) => {
                 e.preventDefault();
-                if(pin.length === 4) {
-                    setCurrentUser({ id: pin, name: `Öğretmen (${pin})` });
-                    setPin("");
+                if(pinInput.length >= 4) {
+                    setCurrentUser({ id: pinInput, name: pinInput });
+                    setPinInput("");
                 } else {
-                    alert("Lütfen 4 haneli bir PIN giriniz.");
+                    alert("PIN en az 4 haneli olmalıdır.");
                 }
             };
 
@@ -86,7 +94,6 @@
                 setPage('dashboard');
             };
 
-            // --- DATA ACTIONS ---
             const saveData = (stds, hws, exms) => {
                 if(stds) { setStudents(stds); localStorage.setItem(`s12_${selClass.id}`, JSON.stringify(stds)); }
                 if(hws) { setHomeworks(hws); localStorage.setItem(`h12_${selClass.id}`, JSON.stringify(hws)); }
@@ -120,14 +127,14 @@
                 localStorage.setItem(`h12_${selClass.id}`, JSON.stringify(newHws));
             };
 
-            // --- CHART (YÜZDELİK MODEL - KORUNDU) ---
+            // Yüzdelik Grafik
             const HybridChart = ({ stdId }) => {
                 const width = 800; const height = 240; const padding = 40;
                 const examPoints = exams.map((e, i) => {
                     const net = Number(e.results?.[stdId]?.net) || 0;
                     const qCount = Number(e.qCount) || 1;
-                    const percentage = (net / qCount) * 100;
-                    return { x: padding + (i * (width - 2 * padding) / (exams.length > 1 ? exams.length - 1 : 1)), y: height - padding - ((percentage / 100) * (height - 2 * padding)), val: percentage };
+                    const pct = (net / qCount) * 100;
+                    return { x: padding + (i * (width - 2 * padding) / (exams.length > 1 ? exams.length - 1 : 1)), y: height - padding - ((pct / 100) * (height - 2 * padding)), val: pct };
                 });
                 const std = students.find(s => s.id === stdId);
                 const logs = [...(std?.logs || [])].reverse().slice(-10);
@@ -145,57 +152,57 @@
                 );
             };
 
-            // --- RENDER LOGIN ---
+            // EĞER GİRİŞ YAPILMAMIŞSA
             if (!currentUser) {
                 return (
-                    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
-                        <div className="bg-white p-12 rounded-[3rem] shadow-2xl max-w-md w-full text-center">
-                            <h1 className="text-4xl font-black italic uppercase mb-2">Asistan <span className="text-indigo-600">Pro</span></h1>
-                            <p className="text-slate-400 font-bold text-xs uppercase mb-8 tracking-widest italic">Öğretmen Girişi</p>
-                            
-                            <form onSubmit={handleLogin} className="space-y-6">
-                                <div className="flex justify-center mb-6">
-                                    <input 
-                                        type="password" 
-                                        maxLength="4"
-                                        placeholder="PIN"
-                                        value={pin}
-                                        onChange={(e) => setPin(e.target.value)}
-                                        className="w-full bg-slate-100 border-none rounded-2xl p-5 text-center text-3xl font-black tracking-[1rem] focus:ring-4 focus:ring-indigo-200 outline-none"
-                                    />
-                                </div>
-                                <button type="submit" className="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black uppercase text-sm shadow-xl hover:bg-indigo-500 transition-all">Sisteme Gir</button>
+                    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-6">
+                        <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center">
+                            <h2 className="text-3xl font-black italic uppercase mb-2">Asistan <span className="text-indigo-600">Pro</span></h2>
+                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-8 italic">Öğretmen Cüzdanı Girişi</p>
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <input 
+                                    autoFocus
+                                    type="password" 
+                                    placeholder="PIN GİRİNİZ" 
+                                    className="w-full bg-slate-100 border-none p-5 rounded-2xl text-center text-2xl font-black tracking-widest focus:ring-4 focus:ring-indigo-200 outline-none"
+                                    value={pinInput}
+                                    onChange={(e) => setPinInput(e.target.value)}
+                                />
+                                <button type="submit" className="w-full bg-indigo-600 text-white p-5 rounded-2xl font-black uppercase text-xs shadow-lg hover:bg-indigo-500 transition-all">Sisteme Eriş</button>
                             </form>
-                            <p className="mt-8 text-[10px] text-slate-300 font-bold uppercase">4 Haneli Herhangi Bir PIN ile Kendi Alanınızı Oluşturun</p>
+                            <p className="mt-6 text-[9px] text-slate-400 font-bold uppercase italic italic">Kendi PIN'iniz ile sınıflarınıza ulaşın.</p>
                         </div>
                     </div>
                 );
             }
 
-            // --- RENDER APP ---
+            // ANA UYGULAMA RENDER
             return (
                 <div className="min-h-screen">
+                    {/* ÜST BAR */}
                     <nav className="bg-slate-900 text-white p-5 flex justify-between items-center no-print border-b-4 border-indigo-600">
                         <div className="flex items-center gap-4">
                             <h1 onClick={()=>{setPage('dashboard'); setSelClass(null)}} className="text-xl font-black cursor-pointer italic uppercase">Asistan <span className="text-indigo-400">Pro</span></h1>
-                            {selClass && <span className="hidden md:inline bg-indigo-600 px-4 py-1 rounded-lg text-xs font-bold uppercase">{selClass.name}</span>}
+                            {selClass && <span className="bg-indigo-600 px-4 py-1 rounded-lg text-xs font-bold uppercase italic">{selClass.name}</span>}
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-bold text-indigo-300 uppercase italic">{currentUser.name}</span>
-                            <button onClick={logout} className="bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white px-4 py-1 rounded-lg text-[10px] font-black transition-all">ÇIKIŞ</button>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <span className="block text-[8px] text-slate-400 font-black uppercase italic leading-none">OTURUM</span>
+                                <span className="text-[12px] font-black text-indigo-400 italic uppercase leading-none">{currentUser.name}</span>
+                            </div>
+                            <button onClick={logout} className="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black transition-all">ÇIKIŞ</button>
                         </div>
                     </nav>
 
                     <main className="p-6 max-w-7xl mx-auto">
                         {page === 'dashboard' && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
-                                <button onClick={()=>{const n=prompt("Sınıf Adı:"); if(n)setClasses([...classes,{id:Date.now(), name:n, owner: currentUser.id}])}} className="h-44 border-4 border-dashed border-slate-300 rounded-[2.5rem] font-black text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all uppercase">+ Yeni Sınıf</button>
-                                
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 animate-in fade-in duration-500">
+                                <button onClick={()=>{const n=prompt("Sınıf Adı:"); if(n)setClasses([...classes,{id:Date.now(), name:n, owner: currentUser.id}])}} className="h-44 border-4 border-dashed border-slate-300 rounded-[2.5rem] font-black text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all uppercase">+ Yeni Sınıf Ekle</button>
                                 {classes.filter(c => c.owner === currentUser.id).map(c => (
                                     <div key={c.id} onClick={()=>{setSelClass(c); setPage('list')}} className="bg-white p-10 rounded-[2.5rem] shadow-xl border-b-8 border-indigo-600 hover:-translate-y-2 transition-all cursor-pointer relative group">
                                         <button onClick={(e)=>{e.stopPropagation(); if(confirm("Silinsin mi?")) setClasses(classes.filter(x=>x.id!==c.id))}} className="absolute top-5 right-5 text-red-200 group-hover:text-red-500 font-bold uppercase text-[10px]">Sil</button>
-                                        <h3 className="text-3xl font-black text-slate-800 italic uppercase">{c.name}</h3>
-                                        <p className="text-[9px] font-bold text-slate-300 mt-2">ID: {c.id}</p>
+                                        <h3 className="text-3xl font-black text-slate-800 italic uppercase leading-tight">{c.name}</h3>
+                                        <div className="mt-4 flex gap-2"><span className="text-[8px] bg-slate-100 px-2 py-1 rounded font-bold text-slate-400 uppercase">SINIF ID: {c.id}</span></div>
                                     </div>
                                 ))}
                             </div>
@@ -203,7 +210,7 @@
 
                         {selClass && (
                             <div className="space-y-6 no-print">
-                                {/* SEKMELER (V12.4'TEN KORUNDU) */}
+                                {/* SEKMELER */}
                                 <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl w-fit shadow-sm border mx-auto md:mx-0">
                                     {['list','hw','wheel','exam','stats','rank','reports'].map(t => (
                                         <button key={t} onClick={()=>setPage(t)} className={`tab-btn ${page===t?'active-tab':'text-slate-400 hover:bg-slate-50'}`}>{t==='list'?'Öğrenci':t==='hw'?'Ödev':t==='wheel'?'Kura': t==='exam'?'Sınav': t==='stats'?'Analiz':t==='rank'?'Skor':'Rapor'}</button>
@@ -211,11 +218,11 @@
                                 </div>
 
                                 {page === 'list' && (
-                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl">
+                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in duration-300">
                                         <div className="flex justify-between items-center mb-8 border-b pb-4"><h2 className="text-2xl font-black uppercase italic">Öğrenci Yönetimi</h2>
                                         <div className="flex gap-2">
-                                            <button onClick={()=>{const n=prompt("İsim:"); if(n)saveData([...students,{id:Math.random(),name:n,puan:0,logs:[]}],null,null)}} className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase italic">Tekil Ekle</button>
-                                            <button onClick={()=>{const r=prompt("Liste:"); if(r)saveData(r.split('\n').filter(l=>l.trim()).map(l=>({id:Math.random(),name:l.trim(),puan:0,logs:[]})),null,null)}} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase italic">Toplu Ekle</button>
+                                            <button onClick={()=>{const n=prompt("İsim:"); if(n)saveData([...students,{id:Math.random(),name:n,puan:0,logs:[]}],null,null)}} className="bg-slate-800 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase italic">Ekle</button>
+                                            <button onClick={()=>{const r=prompt("Liste:"); if(r)saveData(r.split('\n').filter(l=>l.trim()).map(l=>({id:Math.random(),name:l.trim(),puan:0,logs:[]})),null,null)}} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs uppercase italic">Toplu</button>
                                         </div></div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             {students.map(s => <div key={s.id} className="p-4 bg-slate-50 rounded-xl border flex justify-between font-bold text-[10px] uppercase italic"><span>{s.name}</span><button onClick={()=>saveData(students.filter(x=>x.id!==s.id),null,null)} className="text-red-300 hover:text-red-600">×</button></div>)}
@@ -273,17 +280,17 @@
                                 )}
 
                                 {page === 'wheel' && (
-                                    <div className="bg-slate-900 rounded-[4rem] p-10 text-center shadow-2xl min-h-[500px] flex flex-col justify-center">
-                                        <h2 className="text-indigo-400 font-black uppercase mb-10 italic tracking-widest text-sm">Şans Çarkı / Kura</h2>
+                                    <div className="bg-slate-900 rounded-[4rem] p-10 text-center shadow-2xl min-h-[500px] flex flex-col justify-center animate-in zoom-in">
+                                        <h2 className="text-indigo-400 font-black uppercase mb-10 italic tracking-widest text-[10px]">Şans Çarkı / Kura</h2>
                                         <div className="h-40 flex items-center justify-center mb-10 text-white">
                                             {isSpinning ? <div className="text-6xl font-black slot-animation uppercase italic">{currentFlashName}</div> : 
                                             winner ? <div className="text-7xl font-black text-yellow-400 animate-bounce uppercase italic">{winner.name}</div> : 
-                                            <div className="text-3xl font-black text-slate-700 italic uppercase">Hazır Bekliyor</div>}
+                                            <div className="text-3xl font-black text-slate-700 italic uppercase">Hazır</div>}
                                         </div>
                                         <div className="flex gap-4 justify-center flex-wrap">
                                             <button onClick={()=>{
                                                 const avail = students.filter(s => !drawnStudents.includes(s.id));
-                                                if(!avail.length) return alert("Bitti!");
+                                                if(!avail.length) return alert("Herkes çekildi!");
                                                 setIsSpinning(true); setWinner(null);
                                                 let c = 0;
                                                 const itv = setInterval(()=>{
@@ -292,10 +299,10 @@
                                                     c++; if(c>25){ clearInterval(itv); const w=avail[Math.floor(Math.random()*avail.length)]; setWinner(w); setDrawnStudents([...drawnStudents, w.id]); setIsSpinning(false); }
                                                 }, 80);
                                             }} disabled={isSpinning} className="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-5 rounded-3xl font-black text-2xl italic uppercase shadow-xl transition-all">ÇEK!</button>
-                                            <button onClick={()=>setDrawnStudents([])} className="bg-slate-800 text-white px-6 py-5 rounded-3xl font-black text-xs uppercase italic hover:bg-slate-700">Sıfırla</button>
+                                            <button onClick={()=>setDrawnStudents([])} className="bg-slate-800 text-white px-6 py-5 rounded-3xl font-black text-[10px] uppercase italic">Sıfırla</button>
                                         </div>
                                         {winner && (
-                                            <div className="mt-12 flex justify-center flex-wrap gap-2 animate-in zoom-in">
+                                            <div className="mt-12 flex justify-center flex-wrap gap-2 animate-in slide-in-from-bottom">
                                                 {[-5,-4,-3,-2,-1,1,2,3,4,5].map(v => (
                                                     <button key={v} onClick={()=>addLog(winner.id, 'KURA', v, 'Kura Ödülü')} className={`w-10 h-10 rounded-xl font-black text-white transition-all hover:scale-110 ${v>0?'bg-emerald-500':'bg-rose-500'}`}>{v>0?`+${v}`:v}</button>
                                                 ))}
@@ -305,30 +312,31 @@
                                 )}
 
                                 {page === 'exam' && (
-                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl">
-                                        <div className="flex justify-between items-center mb-8 border-b pb-4"><h2 className="text-2xl font-black uppercase italic">Deneme Sınavları</h2>
-                                        <button onClick={()=>{const t=prompt("Başlık:"); const q=prompt("Soru:"); if(t&&q)saveData(null,null,[...exams,{id:Date.now(),title:t,qCount:Number(q),results:{}}])}} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black uppercase italic hover:bg-indigo-500">+ Yeni Deneme</button></div>
+                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl animate-in fade-in">
+                                        <div className="flex justify-between items-center mb-8 border-b pb-4"><h2 className="text-2xl font-black uppercase italic text-slate-700">Deneme Sınavları</h2>
+                                        <button onClick={()=>{const t=prompt("Konu:"); const q=prompt("Soru Sayısı:"); if(t&&q)saveData(null,null,[...exams,{id:Date.now(),title:t,qCount:Number(q),results:{}}])}} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black uppercase italic text-xs hover:bg-indigo-500">+ Yeni Deneme</button></div>
                                         <div className="space-y-6">
                                             {exams.map(e => (
                                                 <div key={e.id} className="p-6 bg-slate-50 rounded-[2rem] border relative group">
-                                                    <button onClick={()=>saveData(null,null,exams.filter(ex=>ex.id!==e.id))} className="absolute top-4 right-4 text-red-300 opacity-0 group-hover:opacity-100 transition-all font-bold">SİL</button>
+                                                    <button onClick={()=>saveData(null,null,exams.filter(ex=>ex.id!==e.id))} className="absolute top-4 right-4 text-red-300 opacity-0 group-hover:opacity-100 transition-all font-bold text-[10px]">SİL</button>
                                                     <h3 className="font-black text-indigo-700 mb-4 uppercase italic">{e.title} <span className="text-slate-400 ml-2">({e.qCount} Soru)</span></h3>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                                                         {students.map(s => (
                                                             <div key={s.id} className="bg-white p-3 rounded-xl border flex flex-col gap-2">
                                                                 <span className="font-bold text-[10px] uppercase italic truncate">{s.name}</span>
                                                                 <div className="flex gap-2">
-                                                                    <input type="number" placeholder="D" className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none" defaultValue={e.results?.[s.id]?.d} onBlur={(ev)=>{
+                                                                    <input type="number" placeholder="D" className="w-full p-2 border rounded-lg font-bold text-center text-xs outline-none" defaultValue={e.results?.[s.id]?.d} onBlur={(ev)=>{
                                                                         const d = Number(ev.target.value) || 0;
                                                                         const y = Number(e.results?.[s.id]?.y) || 0;
                                                                         saveData(null,null,exams.map(ex=>ex.id===e.id?{...ex,results:{...ex.results,[s.id]:{d,y,net:d-(y/3)}}}:ex));
                                                                     }} />
-                                                                    <input type="number" placeholder="Y" className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none" defaultValue={e.results?.[s.id]?.y} onBlur={(ev)=>{
+                                                                    <input type="number" placeholder="Y" className="w-full p-2 border rounded-lg font-bold text-center text-xs outline-none" defaultValue={e.results?.[s.id]?.y} onBlur={(ev)=>{
                                                                         const d = Number(e.results?.[s.id]?.d) || 0;
                                                                         const y = Number(ev.target.value) || 0;
                                                                         saveData(null,null,exams.map(ex=>ex.id===e.id?{...ex,results:{...ex.results,[s.id]:{d,y,net:d-(y/3)}}}:ex));
                                                                     }} />
                                                                 </div>
+                                                                <div className="text-[9px] text-center font-black text-indigo-400">NET: {(e.results?.[s.id]?.net || 0).toFixed(2)}</div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -339,7 +347,7 @@
                                 )}
 
                                 {page === 'stats' && (
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 animate-in fade-in">
                                         <h2 className="text-center font-black text-3xl uppercase italic mb-6">📉 Başarı Analizi</h2>
                                         {students.map(s => {
                                             const st = exams.map(e => e.results?.[s.id]).filter(r => r);
@@ -361,12 +369,12 @@
                                 )}
 
                                 {page === 'rank' && (
-                                    <div className="max-w-4xl mx-auto space-y-4 pt-10">
-                                        <h2 className="text-center font-black text-4xl uppercase italic mb-10 tracking-tighter text-slate-800">🏆 Liderlik Tablosu</h2>
+                                    <div className="max-w-4xl mx-auto space-y-4 pt-10 animate-in slide-in-from-bottom">
+                                        <h2 className="text-center font-black text-4xl uppercase italic mb-10 text-slate-800">🏆 Liderlik Tablosu</h2>
                                         {students.sort((a,b)=>b.puan-a.puan).map((s,i) => (
                                             <div key={s.id} onClick={()=>setDetailStudent(s)} className="bg-white p-8 rounded-[2.5rem] shadow-xl flex justify-between items-center border-l-[16px] border-indigo-600 cursor-pointer hover:scale-[1.02] transition-all">
                                                 <div className="flex items-center gap-8"><span className="text-5xl font-black text-slate-100 italic">#{i+1}</span><h3 className="text-xl font-black text-slate-700 uppercase italic">{s.name}</h3></div>
-                                                <div className="text-3xl font-black text-indigo-600 bg-indigo-50 px-10 py-4 rounded-3xl italic">{s.puan || 0} P</div>
+                                                <div className="text-3xl font-black text-indigo-600 bg-indigo-50 px-10 py-4 rounded-3xl italic">{s.puan || 0} P</h3></div>
                                             </div>
                                         ))}
                                     </div>
@@ -379,7 +387,7 @@
                                             {students.map(s => (
                                                 <div key={s.id} className="p-6 border-2 border-slate-100 rounded-3xl flex justify-between items-center hover:bg-slate-50 transition-all">
                                                     <h3 className="text-lg font-black uppercase italic text-slate-600">{s.name}</h3>
-                                                    <button onClick={()=>{setDetailStudent(s); setTimeout(()=>window.print(), 500)}} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black italic uppercase text-[10px] shadow-lg">Rapor Hazırla</button>
+                                                    <button onClick={()=>{setDetailStudent(s); setTimeout(()=>window.print(), 500)}} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black italic uppercase text-[10px]">Raporu Hazırla</button>
                                                 </div>
                                             ))}
                                         </div>
@@ -389,8 +397,8 @@
                         )}
 
                         {detailStudent && (
-                            <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={()=>setDetailStudent(null)}>
-                                <div className="bg-white w-full max-w-4xl rounded-[3rem] p-10 shadow-2xl relative" onClick={e=>e.stopPropagation()}>
+                            <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={()=>setDetailStudent(null)}>
+                                <div className="bg-white w-full max-w-4xl rounded-[3rem] p-8 shadow-2xl relative" onClick={e=>e.stopPropagation()}>
                                     <div className="flex justify-between items-center mb-6 no-print border-b pb-4">
                                         <h2 className="text-3xl font-black italic uppercase text-slate-800">{detailStudent.name} <span className="text-indigo-600">Gelişim Karnesi</span></h2>
                                         <button onClick={()=>setDetailStudent(null)} className="text-slate-300 hover:text-red-500 text-4xl transition-colors">×</button>
@@ -404,23 +412,21 @@
                                         </div>
                                         <HybridChart stdId={detailStudent.id} />
                                     </div>
-
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                                        <div className="p-6 bg-slate-900 text-white rounded-[2rem] text-center shadow-lg"><p className="text-[10px] font-bold opacity-50 uppercase mb-1 italic">GÜNCEL PUAN</p><p className="text-4xl font-black italic">{detailStudent.puan} P</p></div>
+                                        <div className="p-6 bg-slate-900 text-white rounded-[2rem] text-center shadow-lg"><p className="text-[10px] font-bold opacity-50 uppercase mb-1 italic">TOPLAM PUAN</p><p className="text-4xl font-black italic">{detailStudent.puan} P</p></div>
                                         <div className="p-4 no-print flex gap-2 bg-indigo-50 rounded-[2rem]">
-                                            <input id="mPuan" type="number" className="w-full bg-white border-2 border-indigo-100 rounded-2xl p-4 text-center font-black text-xl outline-none focus:border-indigo-500 transition-all" placeholder="+ / -" />
-                                            <button onClick={()=>{const v=document.getElementById('mPuan').value; if(v)addLog(detailStudent.id,'MANUEL',v,'Giriş')}} className="bg-indigo-600 text-white px-8 rounded-2xl font-black italic uppercase shadow-lg hover:bg-indigo-500 transition-all">EKLE</button>
+                                            <input id="mPuan" type="number" className="w-full bg-white border-2 border-indigo-100 rounded-2xl p-4 text-center font-black text-xl outline-none" placeholder="+ / -" />
+                                            <button onClick={()=>{const v=document.getElementById('mPuan').value; if(v)addLog(detailStudent.id,'MANUEL',v,'Giriş')}} className="bg-indigo-600 text-white px-8 rounded-2xl font-black italic uppercase text-xs shadow-lg hover:bg-indigo-500 transition-all">EKLE</button>
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
                                         <div><h4 className="text-[11px] font-black uppercase text-indigo-600 italic mb-4">🏆 Puan Hareketleri</h4>
-                                            <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                                {(detailStudent.logs || []).map((l,i)=><div key={i} className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase italic border border-transparent hover:border-indigo-100"><div><span className="text-slate-400 block text-[8px] font-normal">{l.date}</span>{l.reason}</div><span className={l.amount>0?'text-emerald-500':'text-red-500'}>{l.amount>0?`+${l.amount}`:l.amount} P</span></div>)}
+                                            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+                                                {(detailStudent.logs || []).map((l,i)=><div key={i} className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase italic"><div><span className="text-slate-400 block text-[8px]">{l.date}</span>{l.reason}</div><span className={l.amount>0?'text-emerald-500':'text-red-500'}>{l.amount>0?`+${l.amount}`:l.amount} P</span></div>)}
                                             </div>
                                         </div>
                                         <div><h4 className="text-[11px] font-black uppercase text-indigo-600 italic mb-4">📊 Deneme Performansı</h4>
-                                            <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
                                                 {exams.map(e=>(
                                                     <div key={e.id} className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold uppercase italic">
                                                         <span>{e.title}</span><div className="text-right"><span className="text-slate-900 block">{(e.results?.[detailStudent.id]?.net || 0).toFixed(2)} Net</span><span className="text-orange-500 text-[8px]">%{((e.results?.[detailStudent.id]?.net / e.qCount)*100 || 0).toFixed(0)}</span></div>
@@ -429,7 +435,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-8 text-center print-only hidden border-t pt-4 opacity-40 text-[9px] font-black uppercase italic">Asistan Pro V12.5 Akademik İzleme Raporu</div>
+                                    <div className="mt-8 text-center print-only hidden border-t pt-4 opacity-40 text-[9px] font-black uppercase italic italic">Asistan Pro V12.6 Akademik İzleme Raporu</div>
                                 </div>
                             </div>
                         )}
