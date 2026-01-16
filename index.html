@@ -1,136 +1,117 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performans Raporu V12.4 - Makyajlı Sürüm</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+<div id="student-detail-v12-4" style="background:#fcfcfc; border-radius:12px; padding:20px; font-family:'Inter', system-ui, sans-serif;">
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
         
-        /* Yeni Performans Paneli */
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
-        .stat-box { text-align: center; flex: 1; }
-        .stat-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.8; display: block; margin-bottom: 5px; }
-        .stat-value { font-size: 1.8rem; font-weight: bold; }
-        .delta-badge { font-size: 0.9rem; padding: 3px 8px; border-radius: 5px; margin-left: 5px; }
-        
-        /* Tablo Yapısı (12.4 Standartları) */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background-color: #ecf0f1; color: #7f8c8d; text-align: left; padding: 12px; font-weight: 600; border-bottom: 2px solid #ddd; }
-        td { padding: 15px 12px; border-bottom: 1px solid #eee; }
-        tr:hover { background-color: #f9f9f9; }
-
-        /* Trend Renkleri */
-        .up { color: #27ae60; font-weight: bold; }
-        .down { color: #e74c3c; font-weight: bold; }
-        .stable { color: #f39c12; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2 style="margin-top: 0; color: #2c3e50;">Deneme Analiz Sistemi <small style="font-size: 0.5em; vertical-align: middle;">V12.4</small></h2>
-
-    <div class="dashboard-header">
-        <div class="stat-box">
-            <span class="stat-label">Son Skor</span>
-            <div id="last-score" class="stat-value">--</div>
-            <span id="delta-val" class="delta-badge"></span>
+        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Güncel Skor</div>
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-top: 5px;">
+                <span id="v12-last-puan" style="font-size: 28px; font-weight: 800; color: #2d3436;">--</span>
+                <span id="v12-delta" style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">--</span>
+            </div>
         </div>
-        <div class="stat-box" style="border-left: 1px solid #555; border-right: 1px solid #555;">
-            <span class="stat-label">Son 5 Form</span>
-            <div id="form-badges" style="font-size: 1.4rem; letter-spacing: 4px; margin-top:5px;">--</div>
+
+        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: center;">
+            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Son 5 Deneme Trendi</div>
+            <div id="v12-badges" style="font-size: 22px; margin-top: 8px; letter-spacing: 3px;">--</div>
         </div>
-        <div class="stat-box">
-            <span class="stat-label">Son 5 Ortalama</span>
-            <div id="avg-score" class="stat-value">--</div>
+
+        <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: right;">
+            <div style="font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase;">Son 5 Ortalama</div>
+            <div id="v12-average" style="font-size: 28px; font-weight: 800; color: #2d3436; margin-top: 5px;">--</div>
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Deneme Adı</th>
-                <th>Puan</th>
-                <th>Net</th>
-                <th>Tarih</th>
-                <th>Trend</th>
-            </tr>
-        </thead>
-        <tbody id="exam-table-body">
-            </tbody>
-    </table>
+    <div style="background: white; border-radius: 10px; border: 1px solid #eaeaea; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Deneme Adı</th>
+                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Puan</th>
+                    <th style="padding: 15px; color: #636e72; font-weight: 600;">Net</th>
+                    <th style="padding: 15px; color: #636e72; font-weight: 600; text-align: center;">Trend (±%5)</th>
+                </tr>
+            </thead>
+            <tbody id="v12-table-rows">
+                </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Test Verisi (En yeni sınav en üstte)
-    const examData = [
-        { name: "Türkiye Geneli - 5", score: 88, net: 72.5, date: "15.01.2026" },
-        { name: "Branş Denemesi - 12", score: 84, net: 68.0, date: "12.01.2026" },
-        { name: "Kurum Sınavı - 8", score: 82, net: 65.5, date: "08.01.2026" },
-        { name: "Özdebir - 3", score: 83, net: 66.0, date: "05.01.2026" },
-        { name: "Limit - 2", score: 78, net: 61.5, date: "01.01.2026" }
-    ];
+/**
+ * Öğretmen Asistan Pro v12.4 Entegrasyon Fonksiyonu
+ * @param {Array} exams - Öğrenci deneme verileri dizisi
+ */
+function updateStudentView(exams) {
+    const tableBody = document.getElementById('v12-table-rows');
+    const badgeContainer = document.getElementById('v12-badges');
+    let totalScore = 0;
+    let badgeHTML = "";
+    
+    // Tabloyu temizle
+    tableBody.innerHTML = "";
 
-    function calculateReport() {
-        const tbody = document.getElementById('exam-table-body');
-        let totalForAvg = 0;
-        let badgesHTML = '';
-
-        examData.forEach((exam, index) => {
-            const prevExam = examData[index + 1];
-            let trendEmoji = '⚪';
-            let trendClass = '';
-
-            if (prevExam) {
-                const change = ((exam.score - prevExam.score) / prevExam.score) * 100;
-                
-                if (change > 5) {
-                    trendEmoji = '🟢';
-                    trendClass = 'up';
-                } else if (change < -5) {
-                    trendEmoji = '🔴';
-                    trendClass = 'down';
-                } else {
-                    trendEmoji = '🟡';
-                    trendClass = 'stable';
-                }
-            }
-
-            // Tabloyu Oluştur (12.4 Ayrı Sütun Yapısı)
-            const row = `<tr>
-                <td><strong>${exam.name}</strong></td>
-                <td>${exam.score}</td>
-                <td>${exam.net}</td>
-                <td style="color: #999; font-size: 0.85rem;">${exam.date}</td>
-                <td>${trendEmoji}</td>
-            </tr>`;
-            tbody.innerHTML += row;
-
-            // İlk 5 sınav için form ve ortalama hesabı
-            if (index < 5) {
-                totalForAvg += exam.score;
-                badgesHTML += trendEmoji;
-            }
-        });
-
-        // Üst Paneli Güncelle
-        const lastExam = examData[0];
-        const secondLast = examData[1];
-        const deltaPercent = (((lastExam.score - secondLast.score) / secondLast.score) * 100).toFixed(1);
+    exams.forEach((exam, i) => {
+        let trendIcon = "⚪"; 
         
-        document.getElementById('last-score').innerText = lastExam.score;
-        document.getElementById('avg-score').innerText = (totalForAvg / Math.min(examData.length, 5)).toFixed(1);
-        document.getElementById('form-badges').innerHTML = badgesHTML;
-        
-        const deltaEl = document.getElementById('delta-val');
-        deltaEl.innerText = (deltaPercent > 0 ? '+' : '') + deltaPercent + '%';
-        deltaEl.style.background = deltaPercent > 5 ? '#27ae60' : (deltaPercent < -5 ? '#e74c3c' : '#f39c12');
+        // Bir önceki deneme ile kıyaslama (%5 kuralı)
+        if (exams[i + 1]) {
+            const current = exam.puan;
+            const previous = exams[i + 1].puan;
+            const diffPercent = ((current - previous) / previous) * 100;
+
+            if (diffPercent > 5) trendIcon = "🟢";
+            else if (diffPercent < -5) trendIcon = "🔴";
+            else trendIcon = "🟡";
+        }
+
+        // Tablo Satırı Oluştur (Ayrı Sütun Formatı)
+        tableBody.innerHTML += `
+            <tr style="border-bottom: 1px solid #f9f9f9;">
+                <td style="padding: 15px; font-weight: 600; color: #2d3436;">${exam.ad}</td>
+                <td style="padding: 15px; color: #0984e3; font-weight: 700;">${exam.puan}</td>
+                <td style="padding: 15px; color: #636e72;">${exam.net} Net</td>
+                <td style="padding: 15px; text-align: center; font-size: 18px;">${trendIcon}</td>
+            </tr>
+        `;
+
+        // Son 5 veri için özet hesaplamaları
+        if (i < 5) {
+            totalScore += exam.puan;
+            badgeHTML += trendIcon;
+        }
+    });
+
+    // Üst Panel Verileri
+    const latest = exams[0];
+    const second = exams[1] || latest;
+    const delta = (((latest.puan - second.puan) / second.puan) * 100).toFixed(1);
+    
+    document.getElementById('v12-last-puan').innerText = latest.puan;
+    document.getElementById('v12-average').innerText = (totalScore / Math.min(exams.length, 5)).toFixed(1);
+    document.getElementById('v12-badges').innerHTML = badgeHTML;
+
+    // Delta Renklendirme
+    const deltaEl = document.getElementById('v12-delta');
+    deltaEl.innerText = (delta > 0 ? "+" : "") + delta + "%";
+    
+    if (Math.abs(delta) <= 5) {
+        deltaEl.style.background = "#fff3e0"; deltaEl.style.color = "#e67e22"; // Sabit
+    } else if (delta > 5) {
+        deltaEl.style.background = "#e8f5e9"; deltaEl.style.color = "#2e7d32"; // Artış
+    } else {
+        deltaEl.style.background = "#ffebee"; deltaEl.style.color = "#c62828"; // Düşüş
     }
+}
 
-    calculateReport();
+// TEST VERİSİ (Projeden gelen veriyi buraya bağlayın)
+const sampleExams = [
+    { ad: "Final Denemesi - 05", puan: 95, net: 78.5 },
+    { ad: "Genel Deneme - 04", puan: 82, net: 65.0 },
+    { ad: "Tarama Sınavı - 03", puan: 84, net: 67.5 },
+    { ad: "Başarı İzleme - 02", puan: 80, net: 64.0 },
+    { ad: "Seviye Tespit - 01", puan: 72, net: 55.5 }
+];
+
+updateStudentView(sampleExams);
 </script>
-
-</body>
-</html>
