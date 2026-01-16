@@ -2,151 +2,195 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öğretmen Asistan Pro v12.4 (Makyajlı Sürüm)</title>
     <style>
-        /* v12.4 ANA TASARIM DİSİPLİNİ */
-        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; padding: 20px; }
-        .rapor-sayfasi { max-width: 950px; margin: auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; }
         
-        /* YENİ PERFORMANS SKALASI (ÜST PANEL) */
-        .performans-skalasi { 
-            display: flex; 
-            background: #1a2a3a; 
-            color: white; 
-            padding: 30px; 
-            justify-content: space-between; 
-            align-items: center;
-        }
-        .skala-item { text-align: center; flex: 1; }
-        .skala-baslik { font-size: 11px; font-weight: 700; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
-        .skala-deger { font-size: 32px; font-weight: 900; margin-top: 5px; }
-        .delta-kutusu { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
+        /* 12.4 ANA MENÜ (SOL PANEL) */
+        .sidebar { width: 240px; background: var(--primary); color: white; display: flex; flex-direction: column; }
+        .sidebar h2 { padding: 20px; font-size: 1.2rem; border-bottom: 1px solid #3e4f5f; }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.3s; border-bottom: 1px solid #3e4f5f; }
+        .menu-item:hover, .active { background: #34495e; border-left: 5px solid var(--accent); }
 
-        /* AYRI SÜTUNLU GELİŞİM TABLOSU */
-        .tablo-alani { padding: 25px; }
-        .v12-tablo { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .v12-tablo th { 
-            text-align: left; 
-            padding: 15px; 
-            background: #f8fafc; 
-            color: #64748b; 
-            font-size: 12px; 
-            text-transform: uppercase; 
-            border-bottom: 2px solid #edf2f7;
-        }
-        .v12-tablo td { padding: 18px 15px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
-        .puan-sutun { font-weight: 800; color: #2563eb; text-align: center; }
-        .net-sutun { color: #64748b; text-align: center; }
-        .trend-sutun { text-align: center; font-size: 20px; }
-        
-        /* TREND RENKLERİ */
-        .bg-yukselis { background: #10b981; color: white; }
-        .bg-dusus { background: #ef4444; color: white; }
-        .bg-stabil { background: #f59e0b; color: white; }
+        /* ANA İÇERİK ALANI */
+        .content { flex: 1; padding: 30px; overflow-y: auto; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* FORM VE TABLO DİSİPLİNİ */
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select, button { padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: var(--accent); color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+
+        /* YENİ PERFORMANS SKALASI (GELİŞİM KARNESİ) */
+        .skala-container { display: flex; gap: 15px; margin-bottom: 20px; color: white; }
+        .skala-box { flex: 1; padding: 15px; border-radius: 8px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="rapor-sayfasi">
-    <div class="performans-skalasi">
-        <div class="skala-item" style="text-align: left;">
-            <div class="skala-baslik">GÜNCEL SONUÇ</div>
-            <div class="skala-deger">
-                <span id="ana-puan">--</span>
-                <span id="ana-delta" class="delta-kutusu">--</span>
+    <div class="sidebar">
+        <h2>Asistan Pro v12.4</h2>
+        <div class="menu-item active" onclick="showSection('ogrenci-ekle')">👤 Öğrenci Ekleme</div>
+        <div class="menu-item" onclick="showSection('sinav-giris')">📝 Sınav Girişi</div>
+        <div class="menu-item" onclick="showSection('odev-takip')">📚 Ödev Takip</div>
+        <div class="menu-item" onclick="showSection('analiz-skor')">📊 Analiz ve Skor</div>
+    </div>
+
+    <div class="content">
+        
+        <div id="ogrenci-ekle" class="section active">
+            <h3>👤 Yeni Öğrenci Ekle</h3>
+            <div class="card">
+                <input type="text" id="stdName" placeholder="Öğrenci Adı Soyadı">
+                <input type="text" id="stdClass" placeholder="Sınıfı">
+                <button onclick="saveStudent()">Öğrenciyi Kaydet</button>
+            </div>
+            <div class="card">
+                <h4>Kayıtlı Öğrenciler</h4>
+                <ul id="studentList"></ul>
             </div>
         </div>
-        
-        <div class="skala-item" style="border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
-            <div class="skala-baslik">SON 5 TREND (FORM)</div>
-            <div id="ana-badges" style="margin-top:10px; letter-spacing: 5px;">--</div>
+
+        <div id="sinav-giris" class="section">
+            <h3>📝 Sınav Puanı Girişi</h3>
+            <div class="card">
+                <select id="selectStudent"></select>
+                <input type="text" id="examName" placeholder="Deneme Adı">
+                <input type="number" id="examScore" placeholder="Puan">
+                <input type="number" id="examNet" placeholder="Net">
+                <button onclick="saveScore()">Puanı İşle</button>
+            </div>
         </div>
 
-        <div class="skala-item" style="text-align: right;">
-            <div class="skala-baslik">HAREKETLİ ORTALAMA</div>
-            <div id="ana-ortalama" class="skala-deger" style="color: #10b981;">--</div>
+        <div id="odev-takip" class="section">
+            <h3>📚 Ödev Takip Çizelgesi</h3>
+            <div class="card">
+                <p>Bu bölümde v12.4 ödev takip modülü çalışmaktadır.</p>
+                <input type="text" placeholder="Ödev Konusu">
+                <button>Ödev Ata</button>
+            </div>
         </div>
+
+        <div id="analiz-skor" class="section">
+            <h3>📊 Analiz ve Gelişim Karnesi</h3>
+            <div class="card">
+                <select id="selectAnalysisStudent" onchange="loadReport(this.value)">
+                    <option value="">Öğrenci Seçiniz...</option>
+                </select>
+            </div>
+
+            <div id="reportArea" style="display:none;">
+                <div class="skala-container">
+                    <div class="skala-box" style="background: var(--primary);">
+                        <small>SON SKOR</small>
+                        <div id="lastScore" style="font-size: 24px; font-weight: bold;">--</div>
+                        <div id="deltaTag" style="font-size: 12px; margin-top:5px;">--</div>
+                    </div>
+                    <div class="skala-box" style="background: #34495e;">
+                        <small>SON 5 TREND</small>
+                        <div id="trendBadges" style="font-size: 20px; margin-top:5px; letter-spacing: 3px;">--</div>
+                    </div>
+                    <div class="skala-box" style="background: var(--success);">
+                        <small>SON 5 ORTALAMA</small>
+                        <div id="avgScore" style="font-size: 24px; font-weight: bold;">--</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h4>Gelişim Karnesi Detayları</h4>
+                    <table class="v12-tablo">
+                        <thead>
+                            <tr>
+                                <th>Sınav Adı</th>
+                                <th>Puan</th>
+                                <th>Net</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="tablo-alani">
-        <h3 style="margin: 0 0 20px 0; color: #1e293b; font-size: 18px;">Gelişim Karnesi Detayları</h3>
-        <table class="v12-tablo">
-            <thead>
-                <tr>
-                    <th>Deneme Tanımı</th>
-                    <th style="text-align: center;">Puan</th>
-                    <th style="text-align: center;">Net</th>
-                    <th style="text-align: center;">Trend (±%5)</th>
-                </tr>
-            </thead>
-            <tbody id="v12-liste">
-                </tbody>
-        </table>
-    </div>
-</div>
+    <script>
+        // v12.4 VERİ TABANI SİMÜLASYONU
+        let data = JSON.parse(localStorage.getItem('asistanData')) || { students: [] };
 
-<script>
-    // ÖĞRETMEN ASİSTAN PRO v12.4 VERİ ENTEGRASYONU
-    function raporuOlustur(veriler) {
-        const liste = document.getElementById('v12-liste');
-        let toplamPuan = 0;
-        let formIkonlari = "";
-        
-        liste.innerHTML = ""; 
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+            updateSelectors();
+        }
 
-        veriler.forEach((sinav, i) => {
-            let trend = "🟡";
-            // %5 KURALI HESAPLAMA
-            if (veriler[i+1]) {
-                const degisim = ((sinav.puan - veriler[i+1].puan) / veriler[i+1].puan) * 100;
-                if (degisim > 5) trend = "🟢";
-                else if (degisim < -5) trend = "🔴";
-            }
+        function saveStudent() {
+            let name = document.getElementById('stdName').value;
+            if(!name) return;
+            data.students.push({ id: Date.now(), name: name, exams: [] });
+            saveAndRefresh();
+        }
 
-            // AYRI SÜTUNLU TABLO SATIRI
-            liste.innerHTML += `
-                <tr>
-                    <td style="font-weight: 600;">${sinav.ad}</td>
-                    <td class="puan-sutun">${sinav.puan}</td>
-                    <td class="net-sutun">${sinav.net} Net</td>
-                    <td class="trend-sutun">${trend}</td>
-                </tr>
-            `;
+        function saveScore() {
+            let id = document.getElementById('selectStudent').value;
+            let exam = { 
+                ad: document.getElementById('examName').value, 
+                puan: parseFloat(document.getElementById('examScore').value), 
+                net: parseFloat(document.getElementById('examNet').value) 
+            };
+            let std = data.students.find(s => s.id == id);
+            std.exams.unshift(exam); // En yeni en başa
+            saveAndRefresh();
+            alert("Puan kaydedildi!");
+        }
 
-            // ÜST PANEL İÇİN SON 5 VERİSİ
-            if (i < 5) {
-                toplamPuan += sinav.puan;
-                formIkonlari += trend;
-            }
-        });
+        function loadReport(id) {
+            if(!id) return;
+            let std = data.students.find(s => s.id == id);
+            document.getElementById('reportArea').style.display = 'block';
+            
+            let tbody = document.getElementById('reportTable');
+            tbody.innerHTML = "";
+            let total = 0, badges = "";
 
-        // ÜST PANEL GÜNCELLEME
-        const son = veriler[0];
-        const onceki = veriler[1] || son;
-        const farkYuzde = (((son.puan - onceki.puan) / onceki.puan) * 100).toFixed(1);
+            std.exams.forEach((ex, i) => {
+                let trend = "🟡";
+                if(std.exams[i+1]) {
+                    let diff = ((ex.puan - std.exams[i+1].puan) / std.exams[i+1].puan) * 100;
+                    trend = diff > 5 ? "🟢" : (diff < -5 ? "🔴" : "🟡");
+                }
+                tbody.innerHTML += `<tr><td>${ex.ad}</td><td><b>${ex.puan}</b></td><td>${ex.net}</td><td>${trend}</td></tr>`;
+                if(i < 5) { total += ex.puan; badges += trend; }
+            });
 
-        document.getElementById('ana-puan').innerText = son.puan;
-        document.getElementById('ana-ortalama').innerText = (toplamPuan / Math.min(veriler.length, 5)).toFixed(1);
-        document.getElementById('ana-badges').innerText = formIkonlari;
+            document.getElementById('lastScore').innerText = std.exams[0]?.puan || "--";
+            document.getElementById('avgScore').innerText = std.exams.length ? (total / Math.min(std.exams.length, 5)).toFixed(1) : "--";
+            document.getElementById('trendBadges').innerText = badges || "--";
+        }
 
-        const deltaKutu = document.getElementById('ana-delta');
-        deltaKutu.innerText = (farkYuzde > 0 ? "+" : "") + farkYuzde + "%";
-        
-        // RENK MANTIĞI
-        if (Math.abs(farkYuzde) <= 5) deltaKutu.className = "delta-kutusu bg-stabil";
-        else if (farkYuzde > 5) deltaKutu.className = "delta-kutusu bg-yukselis";
-        else deltaKutu.className = "delta-kutusu bg-dusus";
-    }
+        function updateSelectors() {
+            let selects = [document.getElementById('selectStudent'), document.getElementById('selectAnalysisStudent')];
+            selects.forEach(s => {
+                s.innerHTML = '<option value="">Öğrenci Seçin</option>';
+                data.students.forEach(std => s.innerHTML += `<option value="${std.id}">${std.name}</option>`);
+            });
+            document.getElementById('studentList').innerHTML = data.students.map(s => `<li>${s.name}</li>`).join('');
+        }
 
-    // TEST VERİSİ
-    const ornekVeri = [
-        { ad: "Final Denemesi A", puan: 94, net: 78 },
-        { ad: "Tarama Sınavı 4", puan: 85, net: 69 },
-        { ad: "Türkiye Geneli 2", puan: 86, net: 70 },
-        { ad: "Kurum Denemesi 1", puan: 80, net: 62 },
-        { ad: "Hazırlık Sınavı", puan: 72, net: 55 }
-    ];
-    raporuOlustur(ornekVeri);
-</script>
+        function saveAndRefresh() {
+            localStorage.setItem('asistanData', JSON.stringify(data));
+            updateSelectors();
+        }
 
+        updateSelectors();
+    </script>
 </body>
 </html>
