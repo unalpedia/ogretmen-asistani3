@@ -361,77 +361,96 @@
                                         })}
                                     </div>
                                 )}
-
-                                {page === 'rank' && (
+                                    {page === 'rank' && (
                                     <div className="max-w-4xl mx-auto space-y-4 pt-10">
                                         <h2 className="text-center font-black text-4xl uppercase italic mb-10 tracking-tighter text-slate-800">🏆 Liderlik Tablosu</h2>
-                                        {students.sort((a,b)=>b.puan-a.puan).map((s,i) => (
-                                            <div key={s.id} onClick={()=>setDetailStudent(s)} className="bg-white p-8 rounded-[2.5rem] shadow-xl flex justify-between items-center border-l-[16px] border-indigo-600 cursor-pointer hover:scale-[1.02] transition-all">
-                                                <div className="flex items-center gap-8"><span className="text-5xl font-black text-slate-100 italic">#{i+1}</span><h3 className="text-xl font-black text-slate-700 uppercase italic">{s.name}</h3></div>
-                                                <div className="text-3xl font-black text-indigo-600 bg-indigo-50 px-10 py-4 rounded-3xl italic">{s.puan || 0} PUAN</div>
+                                        {students.sort((a,b)=>(b.puan || 0)-(a.puan || 0)).map((s,i) => (
+                                            <div key={s.id} onClick={()=>setDetailStudent(s)} className={`bg-white p-6 rounded-[2rem] shadow-xl flex justify-between items-center border-b-4 transition-all cursor-pointer hover:scale-[1.02] ${i===0?'border-yellow-400':i===1?'border-slate-300':i===2?'border-orange-400':'border-indigo-600'}`}>
+                                                <div className="flex items-center gap-6">
+                                                    <span className="text-2xl font-black italic text-slate-300 w-8">#{i+1}</span>
+                                                    <span className="text-xl font-black uppercase italic text-slate-700">{s.name}</span>
+                                                </div>
+                                                <div className="text-2xl font-black text-indigo-600 italic">{s.puan} <span className="text-[10px] text-slate-400">PUAN</span></div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
 
                                 {page === 'reports' && (
-                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl text-center">
-                                        <h2 className="text-3xl font-black uppercase italic mb-8">Veli Bilgilendirme Kartları</h2>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {students.map(s => (
-                                                <div key={s.id} className="p-6 border-2 border-slate-100 rounded-3xl flex justify-between items-center hover:bg-slate-50 transition-all">
-                                                    <h3 className="text-lg font-black uppercase italic text-slate-600">{s.name}</h3>
-                                                    <button onClick={()=>{setDetailStudent(s); setTimeout(()=>window.print(), 500)}} className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black italic uppercase text-[10px] shadow-lg">Rapor Hazırla</button>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="bg-white rounded-[2.5rem] p-10 shadow-2xl no-print">
+                                        <h2 className="text-2xl font-black uppercase mb-6 italic">Rapor Yazdır</h2>
+                                        <p className="mb-6 text-slate-500 font-medium">Sınıf listesini ve puan durumunu çıktı almak için aşağıdaki butonu kullanın.</p>
+                                        <button onClick={()=>window.print()} className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black uppercase italic hover:bg-slate-800 transition-all">🖨️ PDF / Yazıcıya Gönder</button>
                                     </div>
                                 )}
                             </div>
                         )}
+                    </main>
 
-                        {detailStudent && (
-                            <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={()=>setDetailStudent(null)}>
-                                <div className="bg-white w-full max-w-4xl rounded-[3rem] p-10 shadow-2xl relative" onClick={e=>e.stopPropagation()}>
-                                    <div className="flex justify-between items-center mb-6 no-print border-b pb-4">
-                                        <h2 className="text-3xl font-black italic uppercase text-slate-800">{detailStudent.name} <span className="text-indigo-600">Gelişim Karnesi</span></h2>
-                                        <button onClick={()=>setDetailStudent(null)} className="text-slate-300 hover:text-red-500 text-4xl transition-colors">×</button>
+                    {/* ÖĞRENCİ DETAY MODAL */}
+                    {detailStudent && (
+                        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+                                <div className="bg-indigo-600 p-8 text-white flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-3xl font-black uppercase italic">{detailStudent.name}</h2>
+                                        <p className="font-bold opacity-80 uppercase text-xs tracking-widest">Öğrenci Performans Kartı</p>
+                                    </div>
+                                    <button onClick={()=>setDetailStudent(null)} className="text-4xl font-light hover:rotate-90 transition-all">&times;</button>
+                                </div>
+                                <div className="p-8 space-y-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 p-6 rounded-3xl border text-center">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Toplam Puan</p>
+                                            <p className="text-4xl font-black text-indigo-600 italic">{detailStudent.puan}</p>
+                                        </div>
+                                        <div className="bg-slate-50 p-6 rounded-3xl border text-center">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase">Sınav Gelişimi</p>
+                                            <HybridChart stdId={detailStudent.id} />
+                                        </div>
                                     </div>
                                     
-                                    <div className="mb-8 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex gap-4 text-[9px] font-black uppercase italic">
-                                                <span className="flex items-center gap-1 text-emerald-500"><div className="w-4 h-1 bg-emerald-500 border-dashed"></div> Puan Trendi</span>
-                                                <span className="flex items-center gap-1 text-orange-500"><div className="w-4 h-1 bg-orange-500"></div> Başarı Yüzdesi (%)</span>
-                                            </div>
-                                            <div className="text-[10px] font-black text-slate-300 uppercase">Son 10 Veri</div>
+                                    <div className="space-y-3">
+                                        <h3 className="font-black uppercase italic text-xs text-slate-400 border-b pb-2">Son İşlemler</h3>
+                                        <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+                                            {(detailStudent.logs || []).map((l, i) => (
+                                                <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border-l-4 border-indigo-400">
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-slate-800 uppercase">{l.reason || 'Genel'}</p>
+                                                        <p className="text-[8px] text-slate-400 font-bold">{l.date}</p>
+                                                    </div>
+                                                    <span className={`font-black italic ${l.amount >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                                        {l.amount >= 0 ? `+${l.amount}` : l.amount}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <HybridChart stdId={detailStudent.id} />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                                        <div className="p-6 bg-slate-900 text-white rounded-[2rem] text-center shadow-lg">
-                                            <p className="text-[10px] font-bold opacity-50 uppercase mb-1 tracking-widest italic">TOPLAM PUAN</p>
-                                            <p className="text-4xl font-black italic">{detailStudent.puan || 0} P</p>
-                                        </div>
-                                        <div className="flex gap-2 no-print">
-                                            <input id="mPuan" type="number" className="w-full bg-slate-100 p-4 rounded-2xl text-center text-2xl font-black outline-none focus:ring-4 focus:ring-indigo-100 transition-all" placeholder="+ / - Puan" />
-                                            <button onClick={()=>{const v=document.getElementById('mPuan').value; if(v)addLog(detailStudent.id,'MANUEL',v,'Öğretmen Girişi')}} className="bg-indigo-600 text-white px-10 rounded-2xl font-black uppercase italic">Ekle</button>
-                                        </div>
-                                    </div>
-
-                                    <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
-                                        {detailStudent.logs?.map((l,i) => (
-                                            <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border-l-4 border-slate-300">
-                                                <div className="text-left"><p className="text-[10px] font-black uppercase italic">{l.type} - {l.reason}</p><p className="text-[8px] text-slate-400 font-bold uppercase">{l.date}</p></div>
-                                                <div className={`font-black italic ${l.amount > 0 ? 'text-emerald-500': 'text-rose-500'}`}>{l.amount > 0 ? `+${l.amount}` : l.amount}</div>
-                                            </div>
-                                        ))}
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </main>
+                        </div>
+                    )}
+
+                    {/* PRINT ONLY AREA */}
+                    <div className="hidden print-only p-10">
+                        <h1 className="text-3xl font-black mb-10 uppercase border-b-4 border-black pb-4">{selClass?.name} - Gelişim Raporu</h1>
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="border-b-2 border-black">
+                                    <th className="text-left p-2 font-black uppercase">Öğrenci Adı</th>
+                                    <th className="text-right p-2 font-black uppercase">Toplam Puan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {students.sort((a,b)=>b.puan-a.puan).map(s => (
+                                    <tr key={s.id} className="border-b">
+                                        <td className="p-2 font-bold uppercase italic">{s.name}</td>
+                                        <td className="p-2 text-right font-black italic">{s.puan} P</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             );
         }
@@ -441,3 +460,4 @@
     </script>
 </body>
 </html>
+
