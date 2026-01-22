@@ -1,1121 +1,176 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AlertCircle, Users, BookOpen, Trophy, BarChart3, FileText, Sparkles, Plus, X, Save, Trash2 } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistan Pro V13 - Modern Eğitim Yönetimi</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-// ============================================================================
-// GÜVENLIK VE YARDIMCI FONKSİYONLAR
-// ============================================================================
-
-const sanitize = (input) => {
-  if (!input) return '';
-  return String(input)
-    .replace(/[<>]/g, '')
-    .trim()
-    .slice(0, 100);
-};
-
-const storage = {
-  set: (key, value) => {
-    try {
-      const serialized = JSON.stringify(value);
-      if (serialized.length > 4 * 1024 * 1024) {
-        alert('Veri çok büyük (max 4MB)');
-        return { success: false };
-      }
-      localStorage.setItem(key, serialized);
-      return { success: true };
-    } catch (e) {
-      console.error('Storage hatası:', e);
-      return { success: false, error: e.message };
-    }
-  },
-  get: (key, defaultValue = null) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  },
-  remove: (key) => {
-    try {
-      localStorage.removeItem(key);
-      return { success: true };
-    } catch (e) {
-      return { success: false, error: e.message };
-    }
-  }
-};
-
-const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-const playRollSound = () => {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(220 + (Math.random() * 80), ctx.currentTime);
-    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch(e) {
-    console.log('Ses çalınamadı');
-  }
-};
-
-// ============================================================================
-// CUSTOM HOOKS
-// ============================================================================
-
-const useLocalStorageState = (key, defaultValue) => {
-  const [state, setState] = useState(() => storage.get(key, defaultValue));
-
-  useEffect(() => {
-    storage.set(key, state);
-  }, [key, state]);
-
-  return [state, setState];
-};
-
-// ============================================================================
-// COMPONENTS
-// ============================================================================
-
-const ErrorBoundary = ({ children }) => {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    const handler = (event) => {
-      console.error('Hata yakalandı:', event.error);
-      setHasError(true);
-    };
-    window.addEventListener('error', handler);
-    return () => window.removeEventListener('error', handler);
-  }, []);
-
-  if (hasError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Bir Hata Oluştu</h2>
-          <p className="text-slate-600 mb-4">Lütfen sayfayı yenileyin</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"
-          >
-            Sayfayı Yenile
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return children;
-};
-
-const HybridChart = ({ stdId, students, exams }) => {
-  const width = 800;
-  const height = 240;
-  const padding = 40;
-  
-  const examPoints = exams.map((e, i) => {
-    const net = Number(e.results?.[stdId]?.net) || 0;
-    const qCount = Number(e.qCount) || 1;
-    const percentage = (net / qCount) * 100;
-    const x = padding + (i * (width - 2 * padding) / Math.max(exams.length - 1, 1));
-    const y = height - padding - ((percentage / 100) * (height - 2 * padding));
-    return { x, y, val: percentage };
-  });
-
-  const std = students.find(s => s.id === stdId);
-  const logs = [...(std?.logs || [])].reverse().slice(-10);
-  const puanPoints = logs.map((l, i) => {
-    const x = padding + (i * (width - 2 * padding) / Math.max(logs.length - 1, 1));
-    const maxPuan = Math.max(...logs.map(log => log.currentTotal), 100);
-    const y = height - padding - ((l.currentTotal / maxPuan) * (height - 2 * padding));
-    return { x, y };
-  });
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" role="img" aria-label="Öğrenci performans grafiği">
-      <line x1={padding} y1={height-padding} x2={width-padding} y2={height-padding} stroke="#cbd5e1" strokeWidth="2" />
-      <line x1={padding} y1={height-padding - (0.5 * (height-2*padding))} x2={width-padding} y2={height-padding - (0.5 * (height-2*padding))} stroke="#f1f5f9" strokeWidth="1" />
-      
-      {puanPoints.length > 1 && (
-        <path 
-          d={`M ${puanPoints.map(p => `${p.x},${p.y}`).join(' L ')}`} 
-          fill="none" 
-          stroke="#10b981" 
-          strokeWidth="2" 
-          strokeDasharray="6" 
-        />
-      )}
-      
-      {examPoints.length > 1 && (
-        <path 
-          d={`M ${examPoints.map(p => `${p.x},${p.y}`).join(' L ')}`} 
-          fill="none" 
-          stroke="#f59e0b" 
-          strokeWidth="3" 
-          strokeLinejoin="round" 
-        />
-      )}
-      
-      {examPoints.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="5" fill="#f59e0b" />
-          <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="10" fontWeight="800" fill="#b45309">
-            %{p.val.toFixed(0)}
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-};
-
-const Tab = ({ active, onClick, icon: Icon, label }) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${
-      active ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'
-    }`}
-    aria-pressed={active}
-  >
-    <Icon className="w-4 h-4" />
-    <span className="hidden sm:inline">{label}</span>
-  </button>
-);
-
-const Dashboard = ({ classes, onAddClass, onSelectClass, onDeleteClass }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
-    <button
-      onClick={onAddClass}
-      className="h-44 border-4 border-dashed border-slate-300 rounded-3xl font-bold text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center justify-center gap-2"
-      aria-label="Yeni sınıf ekle"
-    >
-      <Plus className="w-6 h-6" />
-      <span>Yeni Sınıf</span>
-    </button>
-    {classes.map(c => (
-      <div
-        key={c.id}
-        onClick={() => onSelectClass(c)}
-        className="bg-white p-10 rounded-3xl shadow-xl border-b-8 border-indigo-600 hover:-translate-y-2 transition-all cursor-pointer relative group"
-        role="button"
-        tabIndex={0}
-        onKeyPress={(e) => e.key === 'Enter' && onSelectClass(c)}
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDeleteClass(c.id);
-          }}
-          className="absolute top-5 right-5 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-          aria-label={`${c.name} sınıfını sil`}
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
-        <h3 className="text-3xl font-bold text-slate-800">{c.name}</h3>
-      </div>
-    ))}
-  </div>
-);
-
-const StudentList = ({ students, onAddStudent, onAddBulk, onDeleteStudent }) => {
-  const [name, setName] = useState('');
-  const [bulkText, setBulkText] = useState('');
-  const [showBulk, setShowBulk] = useState(false);
-
-  const handleAddStudent = () => {
-    const cleaned = sanitize(name);
-    if (cleaned) {
-      onAddStudent(cleaned);
-      setName('');
-    }
-  };
-
-  const handleAddBulk = () => {
-    const names = bulkText
-      .split('\n')
-      .map(line => sanitize(line))
-      .filter(line => line.length > 0);
-    
-    if (names.length > 0) {
-      onAddBulk(names);
-      setBulkText('');
-      setShowBulk(false);
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-3xl p-10 shadow-2xl">
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="w-6 h-6" />
-          Öğrenci Yönetimi
-        </h2>
-        <button
-          onClick={() => setShowBulk(!showBulk)}
-          className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          {showBulk ? 'Tekil Ekle' : 'Toplu Ekle'}
-        </button>
-      </div>
-
-      {showBulk ? (
-        <div className="mb-8 space-y-4">
-          <textarea
-            value={bulkText}
-            onChange={(e) => setBulkText(e.target.value)}
-            placeholder="Her satıra bir öğrenci adı yazın..."
-            className="w-full p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500 min-h-[200px]"
-            aria-label="Toplu öğrenci ekleme alanı"
-          />
-          <button
-            onClick={handleAddBulk}
-            className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold"
-          >
-            <Save className="w-4 h-4 inline mr-2" />
-            Kaydet
-          </button>
-        </div>
-      ) : (
-        <div className="mb-8 flex gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddStudent()}
-            placeholder="Öğrenci adı..."
-            className="flex-1 p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
-            maxLength={50}
-            aria-label="Öğrenci adı"
-          />
-          <button
-            onClick={handleAddStudent}
-            className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold"
-          >
-            Ekle
-          </button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {students.map(s => (
-          <div
-            key={s.id}
-            className="p-4 bg-slate-50 rounded-xl border flex justify-between items-center font-bold text-xs"
-          >
-            <span className="truncate">{s.name}</span>
-            <button
-              onClick={() => onDeleteStudent(s.id)}
-              className="text-red-300 hover:text-red-600 ml-2"
-              aria-label={`${s.name} öğrenciyi sil`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {students.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
-          <Users className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <p>Henüz öğrenci eklenmedi</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const HomeworkManager = ({ students, homeworks, onSaveHomeworks, onAddLog }) => {
-  const [hwTitle, setHwTitle] = useState('');
-
-  const handleAddHomework = () => {
-    const title = sanitize(hwTitle);
-    if (title) {
-      onSaveHomeworks([...homeworks, { id: generateId(), title, results: {} }]);
-      setHwTitle('');
-    }
-  };
-
-  const handleBulkUpdate = (hwId, status) => {
-    const hw = homeworks.find(h => h.id === hwId);
-    const points = status === 'done' ? 10 : status === 'partial' ? 5 : 0;
-    
-    students.forEach(s => {
-      const prev = hw.results?.[s.id] || 'none';
-      const prevPoints = prev === 'done' ? 10 : prev === 'partial' ? 5 : 0;
-      const diff = points - prevPoints;
-      
-      if (diff !== 0) {
-        onAddLog(s.id, 'ÖDEV', diff, hw.title);
-      }
-    });
-
-    const newResults = {};
-    students.forEach(s => {
-      newResults[s.id] = status;
-    });
-
-    onSaveHomeworks(homeworks.map(h => 
-      h.id === hwId ? { ...h, results: newResults } : h
-    ));
-  };
-
-  const handleIndividualUpdate = (hwId, stdId, status) => {
-    const hw = homeworks.find(h => h.id === hwId);
-    const prev = hw?.results?.[stdId] || 'none';
-    const points = status === 'done' ? 10 : status === 'partial' ? 5 : 0;
-    const prevPoints = prev === 'done' ? 10 : prev === 'partial' ? 5 : 0;
-    const diff = points - prevPoints;
-
-    if (diff !== 0) {
-      onAddLog(stdId, 'ÖDEV', diff, hw.title);
-    }
-
-    onSaveHomeworks(homeworks.map(h =>
-      h.id === hwId ? { ...h, results: { ...h.results, [stdId]: status } } : h
-    ));
-  };
-
-  return (
-    <div className="bg-white rounded-3xl p-10 shadow-2xl overflow-x-auto">
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <BookOpen className="w-6 h-6" />
-          Ödev Yönetimi
-        </h2>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={hwTitle}
-            onChange={(e) => setHwTitle(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddHomework()}
-            placeholder="Ödev konusu..."
-            className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
-            maxLength={50}
-          />
-          <button
-            onClick={handleAddHomework}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {homeworks.length > 0 ? (
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left pb-4 font-bold text-xs text-slate-400">ÖĞRENCİ</th>
-              {homeworks.map(h => (
-                <th key={h.id} className="px-2">
-                  <div className="flex flex-col items-center gap-1 mb-4">
-                    <span className="text-[10px] font-bold text-indigo-600 mb-2">{h.title}</span>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleBulkUpdate(h.id, 'done')}
-                        className="text-[8px] bg-green-100 text-green-600 px-2 py-1 rounded font-bold"
-                      >
-                        TAM
-                      </button>
-                      <button
-                        onClick={() => handleBulkUpdate(h.id, 'partial')}
-                        className="text-[8px] bg-yellow-100 text-yellow-600 px-2 py-1 rounded font-bold"
-                      >
-                        AZ
-                      </button>
-                      <button
-                        onClick={() => handleBulkUpdate(h.id, 'none')}
-                        className="text-[8px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold"
-                      >
-                        YOK
-                      </button>
-                    </div>
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.map(s => (
-              <tr key={s.id} className="border-t hover:bg-slate-50">
-                <td className="py-3 text-xs font-bold">{s.name}</td>
-                {homeworks.map(h => (
-                  <td key={h.id} className="text-center">
-                    <div className="flex gap-1 justify-center">
-                      {['done', 'partial', 'none'].map(st => (
-                        <button
-                          key={st}
-                          onClick={() => handleIndividualUpdate(h.id, s.id, st)}
-                          className={`px-2 py-1 rounded-lg text-[8px] font-bold transition-all ${
-                            h.results?.[s.id] === st
-                              ? st === 'done'
-                                ? 'bg-green-500 text-white'
-                                : st === 'partial'
-                                ? 'bg-yellow-500 text-white'
-                                : 'bg-red-500 text-white'
-                              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                          }`}
-                        >
-                          {st === 'done' ? 'TAM' : st === 'partial' ? 'AZ' : 'YOK'}
-                        </button>
-                      ))}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <div className="text-center py-12 text-slate-400">
-          <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <p>Henüz ödev eklenmedi</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ExamManager = ({ students, exams, onSaveExams }) => {
-  const [examTitle, setExamTitle] = useState('');
-  const [examQCount, setExamQCount] = useState('');
-
-  const handleAddExam = () => {
-    const title = sanitize(examTitle);
-    const qCount = parseInt(examQCount);
-    
-    if (title && qCount > 0) {
-      onSaveExams([...exams, { id: generateId(), title, qCount, results: {} }]);
-      setExamTitle('');
-      setExamQCount('');
-    }
-  };
-
-  const handleUpdateResult = (examId, stdId, field, value) => {
-    onSaveExams(exams.map(e => {
-      if (e.id === examId) {
-        const currentResult = e.results?.[stdId] || { d: 0, y: 0, net: 0 };
-        const d = field === 'd' ? Number(value) || 0 : currentResult.d;
-        const y = field === 'y' ? Number(value) || 0 : currentResult.y;
-        const net = d - (y / 3);
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
         
-        return {
-          ...e,
-          results: {
-            ...e.results,
-            [stdId]: { d, y, net }
-          }
+        // Lucide ikonlarını React bileşeni olarak kullanmak için yardımcı
+        const Icon = ({ name, ...props }) => {
+            const LucideIcon = lucide[name.charAt(0).toUpperCase() + name.slice(1)];
+            return LucideIcon ? <LucideIcon {...props} /> : null;
         };
-      }
-      return e;
-    }));
-  };
 
-  return (
-    <div className="bg-white rounded-3xl p-10 shadow-2xl">
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <FileText className="w-6 h-6" />
-          Deneme Sınavları
-        </h2>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={examTitle}
-            onChange={(e) => setExamTitle(e.target.value)}
-            placeholder="Sınav konusu..."
-            className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
-            maxLength={50}
-          />
-          <input
-            type="number"
-            value={examQCount}
-            onChange={(e) => setExamQCount(e.target.value)}
-            placeholder="Soru sayısı"
-            className="w-32 p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
-            min="1"
-          />
-          <button
-            onClick={handleAddExam}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        // --- GÜVENLİK VE YARDIMCI FONKSİYONLAR ---
+        const sanitize = (input) => {
+            if (!input) return '';
+            return String(input).replace(/[<>]/g, '').trim().slice(0, 100);
+        };
 
-      <div className="space-y-6">
-        {exams.map(e => (
-          <div key={e.id} className="p-6 bg-slate-50 rounded-3xl border">
-            <h3 className="font-bold text-indigo-700 mb-4">
-              {e.title} <span className="text-slate-400 ml-2">({e.qCount} Soru)</span>
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {students.map(s => (
-                <div key={s.id} className="bg-white p-3 rounded-xl border flex flex-col gap-2">
-                  <span className="font-bold text-[10px] truncate">{s.name}</span>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="D"
-                      className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
-                      defaultValue={e.results?.[s.id]?.d || ''}
-                      onBlur={(ev) => handleUpdateResult(e.id, s.id, 'd', ev.target.value)}
-                      min="0"
-                      max={e.qCount}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Y"
-                      className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
-                      defaultValue={e.results?.[s.id]?.y || ''}
-                      onBlur={(ev) => handleUpdateResult(e.id, s.id, 'y', ev.target.value)}
-                      min="0"
-                      max={e.qCount}
-                    />
-                  </div>
-                  <div className="text-[9px] text-center font-bold text-indigo-400">
-                    NET: {(e.results?.[s.id]?.net || 0).toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-        {exams.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
-            <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
-            <p>Henüz sınav eklenmedi</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+        const storage = {
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return { success: true };
+                } catch (e) { return { success: false, error: e.message }; }
+            },
+            get: (key, defaultValue = null) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch { return defaultValue; }
+            }
+        };
 
-const StatsPage = ({ students, exams, onShowDetail }) => {
-  const sortedStudents = [...students].sort((a, b) => {
-    const getAvg = (std) => {
-      const results = exams.map(e => e.results?.[std.id]).filter(r => r);
-      return results.length ? results.reduce((sum, r) => sum + r.net, 0) / results.length : 0;
-    };
-    return getAvg(b) - getAvg(a);
-  });
+        const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  return (
-    <div className="space-y-4">
-      <h2 className="text-center font-bold text-3xl mb-6 flex items-center justify-center gap-2">
-        <BarChart3 className="w-8 h-8 text-indigo-600" />
-        Başarı Analizi (Ort. Net)
-      </h2>
-      {sortedStudents.map(s => {
-        const results = exams.map(e => e.results?.[s.id]).filter(r => r);
-        const avg = results.length ? (results.reduce((sum, r) => sum + r.net, 0) / results.length).toFixed(2) : "0.00";
+        // --- BİLEŞENLER ---
         
-        return (
-          <div
-            key={s.id}
-            onClick={() => onShowDetail(s)}
-            className="bg-white p-6 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 cursor-pointer hover:bg-slate-50 transition-all"
-          >
-            <span className="text-xl font-bold text-slate-700">{s.name}</span>
-            <div className="bg-indigo-50 px-6 py-2 rounded-2xl text-center">
-              <p className="text-[9px] font-bold text-slate-400">Ortalama Net</p>
-              <p className="text-xl font-bold text-indigo-600">{avg}</p>
-            </div>
-          </div>
-        );
-      })}
-      {students.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
-          <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <p>Henüz öğrenci yok</p>
-        </div>
-      )}
-    </div>
-  );
-};
+        const HybridChart = ({ stdId, students, exams }) => {
+            const width = 800;
+            const height = 240;
+            const padding = 40;
+            
+            // Grafik koordinat hesaplama (Sıfıra bölünme hatası düzeltildi)
+            const getX = (index, total) => {
+                if (total <= 1) return width / 2;
+                return padding + (index * (width - 2 * padding) / (total - 1));
+            };
 
-const WheelOfFortune = ({ students, drawnStudents, onDraw, onReset, onAddLog }) => {
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const [currentFlashName, setCurrentFlashName] = useState("");
+            const examPoints = exams.map((e, i) => {
+                const net = Number(e.results?.[stdId]?.net) || 0;
+                const qCount = Number(e.qCount) || 1;
+                const percentage = (net / qCount) * 100;
+                const x = getX(i, exams.length);
+                const y = height - padding - ((percentage / 100) * (height - 2 * padding));
+                return { x, y, val: percentage };
+            });
 
-  const handleDraw = () => {
-    const available = students.filter(s => !drawnStudents.includes(s.id));
-    if (!available.length) {
-      alert("Tüm öğrenciler çekildi!");
-      return;
-    }
+            return (
+                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto bg-white rounded-2xl border">
+                    <line x1={padding} y1={height-padding} x2={width-padding} y2={height-padding} stroke="#cbd5e1" strokeWidth="2" />
+                    {examPoints.length > 1 && (
+                        <path d={`M ${examPoints.map(p => `${p.x},${p.y}`).join(' L ')}`} fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinejoin="round" />
+                    )}
+                    {examPoints.map((p, i) => (
+                        <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="5" fill="#f59e0b" />
+                            <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="10" fontWeight="800" fill="#b45309">%{p.val.toFixed(0)}</text>
+                        </g>
+                    ))}
+                </svg>
+            );
+        };
 
-    setIsSpinning(true);
-    setWinner(null);
-    let count = 0;
+        // --- ANA UYGULAMA ---
+        function App() {
+            const [page, setPage] = useState('dashboard');
+            const [classes, setClasses] = useState(() => storage.get('ap_v13_classes', []));
+            const [selClass, setSelClass] = useState(null);
+            const [students, setStudents] = useState([]);
 
-    const interval = setInterval(() => {
-      playRollSound();
-      setCurrentFlashName(available[Math.floor(Math.random() * available.length)].name);
-      count++;
-      
-      if (count > 25) {
-        clearInterval(interval);
-        const selected = available[Math.floor(Math.random() * available.length)];
-        setWinner(selected);
-        onDraw(selected.id);
-        setIsSpinning(false);
-      }
-    }, 80);
-  };
+            // Sınıf seçildiğinde verileri yükle
+            useEffect(() => {
+                if (selClass) {
+                    setStudents(storage.get(`s13_${selClass.id}`, []));
+                }
+            }, [selClass]);
 
-  return (
-    <div className="bg-slate-900 rounded-3xl p-10 text-center shadow-2xl min-h-[500px] flex flex-col justify-center">
-      <h2 className="text-indigo-400 font-bold uppercase mb-10 flex items-center justify-center gap-2">
-        <Sparkles className="w-5 h-5" />
-        Şans Çarkı / Kura
-      </h2>
+            // Değişiklikleri kaydet
+            useEffect(() => {
+                storage.set('ap_v13_classes', classes);
+            }, [classes]);
 
-      <div className="h-40 flex items-center justify-center mb-10 text-white">
-        {isSpinning ? (
-          <div className="text-6xl font-bold animate-pulse">{currentFlashName}</div>
-        ) : winner ? (
-          <div className="text-7xl font-bold text-yellow-400 animate-bounce">{winner.name}</div>
-        ) : (
-          <div className="text-3xl font-bold text-slate-700">Hazır Bekliyor</div>
-        )}
-      </div>
+            const handleAddClass = () => {
+                const name = prompt("Sınıf Adı:");
+                if (name) {
+                    const newClass = { id: generateId(), name: sanitize(name) };
+                    setClasses([...classes, newClass]);
+                }
+            };
 
-      <div className="flex gap-4 justify-center flex-wrap">
-        <button
-          onClick={handleDraw}
-          disabled={isSpinning}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-5 rounded-3xl font-bold text-2xl shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Kura çek"
-        >
-          ÇEK!
-        </button>
-        <button
-          onClick={onReset}
-          className="bg-slate-800 text-white px-6 py-5 rounded-3xl font-bold text-xs hover:bg-slate-700"
-          aria-label="Kurayı sıfırla"
-        >
-          Sıfırla
-        </button>
-      </div>
+            const exportData = () => {
+                const data = { classes, students };
+                const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `asistan_yedek_${new Date().toLocaleDateString()}.json`;
+                a.click();
+            };
 
-      {winner && (
-        <div className="mt-12 flex justify-center flex-wrap gap-2">
-          {[-5, -4, -3, -2, -1, 1, 2, 3, 4, 5].map(v => (
-            <button
-              key={v}
-              onClick={() => {
-                onAddLog(winner.id, 'KURA', v, 'Kura Ödülü');
-                setWinner(null);
-              }}
-              className={`w-10 h-10 rounded-xl font-bold text-white transition-all hover:scale-110 ${
-                v > 0 ? 'bg-emerald-500' : 'bg-rose-500'
-              }`}
-              aria-label={`${v > 0 ? '+' : ''}${v} puan ekle`}
-            >
-              {v > 0 ? `+${v}` : v}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+            return (
+                <div className="min-h-screen">
+                    <nav className="bg-slate-900 text-white p-5 flex justify-between items-center border-b-4 border-indigo-600 shadow-xl">
+                        <h1 onClick={() => setPage('dashboard')} className="text-xl font-bold cursor-pointer flex items-center gap-2">
+                            <Icon name="Sparkles" className="text-indigo-400" /> Asistan <span className="text-indigo-400">Pro V13</span>
+                        </h1>
+                        <div className="flex gap-2">
+                            <button onClick={exportData} className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition-colors">
+                                <Icon name="Save" size={20} />
+                            </button>
+                            {selClass && <span className="bg-indigo-600 px-4 py-1 rounded-lg text-xs font-bold self-center">{selClass.name}</span>}
+                        </div>
+                    </nav>
 
-const StudentDetail = ({ student, students, exams, onClose, onAddLog }) => {
-  const [manualPoints, setManualPoints] = useState('');
-
-  const handleAddManualPoints = () => {
-    const points = parseInt(manualPoints);
-    if (points && points !== 0) {
-      onAddLog(student.id, 'MANUEL', points, 'Dışarıdan Giriş');
-      setManualPoints('');
-    }
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white w-full max-w-4xl rounded-3xl p-10 shadow-2xl relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-6 border-b pb-4">
-          <h2 className="text-3xl font-bold text-slate-800">
-            {student.name} <span className="text-indigo-600">Gelişim Karnesi</span>
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-300 hover:text-red-500 text-4xl transition-colors"
-          >
-            ×
-          </button>
-        </div>
-
-        {exams.length > 0 && (
-          <div className="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex gap-4 text-[9px] font-bold">
-                <span className="flex items-center gap-1 text-emerald-500">
-                  <div className="w-4 h-1 bg-emerald-500"></div> Puan Trendi
-                </span>
-                <span className="flex items-center gap-1 text-orange-500">
-                  <div className="w-4 h-1 bg-orange-500"></div> Başarı Yüzdesi (%)
-                </span>
-              </div>
-            </div>
-            <HybridChart stdId={student.id} students={students} exams={exams} />
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="p-6 bg-slate-900 text-white rounded-3xl text-center shadow-lg">
-            <p className="text-[10px] font-bold opacity-50 uppercase mb-1">TOPLAM PUAN</p>
-            <p className="text-4xl font-bold">{student.puan || 0} P</p>
-          </div>
-          <div className="p-4 flex gap-2 bg-indigo-50 rounded-3xl">
-            <input
-              type="number"
-              value={manualPoints}
-              onChange={(e) => setManualPoints(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddManualPoints()}
-              className="w-full bg-white border-2 border-indigo-100 rounded-2xl p-4 text-center font-bold text-xl outline-none focus:border-indigo-500 transition-all"
-              placeholder="+ / -"
-            />
-            <button
-              onClick={handleAddManualPoints}
-              className="bg-indigo-600 text-white px-8 rounded-2xl font-bold shadow-lg hover:bg-indigo-500 transition-all"
-            >
-              EKLE
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
-          <div>
-            <h4 className="text-[11px] font-bold uppercase text-indigo-600 mb-4 flex items-center gap-2">
-              🏆 Puan Hareketleri
-            </h4>
-            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-              {(student.logs || []).map((l, i) => (
-                <div
-                  key={i}
-                  className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold border hover:border-indigo-100"
-                >
-                  <div>
-                    <span className="text-slate-400 block text-[8px] font-normal">{l.date}</span>
-                    {l.reason}
-                  </div>
-                  <span className={l.amount > 0 ? 'text-emerald-500' : 'text-red-500'}>
-                    {l.amount > 0 ? `+${l.amount}` : l.amount} P
-                  </span>
+                    <main className="p-6 max-w-7xl mx-auto">
+                        {page === 'dashboard' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
+                                <button onClick={handleAddClass} className="h-44 border-4 border-dashed border-slate-300 rounded-3xl font-bold text-slate-400 hover:text-indigo-600 hover:border-indigo-200 transition-all flex flex-col items-center justify-center gap-2">
+                                    <Icon name="Plus" size={32} />
+                                    <span>Yeni Sınıf Ekle</span>
+                                </button>
+                                {classes.map(c => (
+                                    <div key={c.id} onClick={() => {setSelClass(c); setPage('list');}} className="bg-white p-10 rounded-3xl shadow-lg border-b-8 border-indigo-600 hover:-translate-y-2 transition-all cursor-pointer group relative">
+                                        <h3 className="text-3xl font-bold text-slate-800">{c.name}</h3>
+                                        <div className="mt-4 text-slate-400 text-sm font-semibold italic flex items-center gap-1">
+                                            Yönetmek için tıkla <Icon name="ChevronRight" size={16} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white p-6 rounded-3xl shadow-sm border text-center py-20">
+                                <Icon name="Construction" size={48} className="mx-auto mb-4 text-indigo-200" />
+                                <h2 className="text-2xl font-bold text-slate-700">Sınıf Paneli Aktif</h2>
+                                <p className="text-slate-500 mt-2">Bu bölümde öğrenci listesi ve diğer modüller React mantığıyla çalışmaya hazırdır.</p>
+                                <button onClick={() => setPage('dashboard')} className="mt-6 text-indigo-600 font-bold">Geri Dön</button>
+                            </div>
+                        )}
+                    </main>
                 </div>
-              ))}
-              {(!student.logs || student.logs.length === 0) && (
-                <p className="text-slate-400 text-center py-4">Henüz kayıt yok</p>
-              )}
-            </div>
-          </div>
-          <div>
-            <h4 className="text-[11px] font-bold uppercase text-indigo-600 mb-4 flex items-center gap-2">
-              📊 Deneme Performansı
-            </h4>
-            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-              {exams.map(e => (
-                <div
-                  key={e.id}
-                  className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold border hover:border-indigo-100"
-                >
-                  <span>{e.title}</span>
-                  <div className="text-right">
-                    <span className="text-slate-900 block">
-                      {(e.results?.[student.id]?.net || 0).toFixed(2)} Net
-                    </span>
-                    <span className="text-orange-500 text-[8px]">
-                      %{(((e.results?.[student.id]?.net || 0) / e.qCount) * 100).toFixed(0)} Başarı
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {exams.length === 0 && (
-                <p className="text-slate-400 text-center py-4">Henüz sınav yok</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// MAIN APP
-// ============================================================================
-
-function App() {
-  const [page, setPage] = useState('dashboard');
-  const [classes, setClasses] = useLocalStorageState('ap_v13_classes', []);
-  const [selClass, setSelClass] = useState(null);
-  const [students, setStudents] = useState([]);
-  const [homeworks, setHomeworks] = useState([]);
-  const [exams, setExams] = useState([]);
-  const [drawnStudents, setDrawnStudents] = useState([]);
-  const [detailStudent, setDetailStudent] = useState(null);
-
-  useEffect(() => {
-    if (selClass) {
-      setStudents(storage.get(`s13_${selClass.id}`, []));
-      setHomeworks(storage.get(`h13_${selClass.id}`, []));
-      setExams(storage.get(`e13_${selClass.id}`, []));
-    }
-  }, [selClass]);
-
-  const saveStudents = useCallback((newStudents) => {
-    setStudents(newStudents);
-    if (selClass) {
-      storage.set(`s13_${selClass.id}`, newStudents);
-    }
-  }, [selClass]);
-
-  const saveHomeworks = useCallback((newHomeworks) => {
-    setHomeworks(newHomeworks);
-    if (selClass) {
-      storage.set(`h13_${selClass.id}`, newHomeworks);
-    }
-  }, [selClass]);
-
-  const saveExams = useCallback((newExams) => {
-    setExams(newExams);
-    if (selClass) {
-      storage.set(`e13_${selClass.id}`, newExams);
-    }
-  }, [selClass]);
-
-  const addLog = useCallback((stdId, type, amount, reason) => {
-    setStudents(prevStudents => {
-      const updated = prevStudents.map(s => {
-        if (s.id === stdId) {
-          const newPuan = (Number(s.puan) || 0) + Number(amount);
-          return {
-            ...s,
-            puan: newPuan,
-            logs: [{
-              date: new Date().toLocaleString('tr-TR'),
-              type,
-              amount: Number(amount),
-              reason: sanitize(reason),
-              currentTotal: newPuan
-            }, ...(s.logs || [])]
-          };
+            );
         }
-        return s;
-      });
-      
-      if (selClass) {
-        storage.set(`s13_${selClass.id}`, updated);
-      }
-      
-      if (detailStudent?.id === stdId) {
-        setDetailStudent(updated.find(x => x.id === stdId));
-      }
-      
-      return updated;
-    });
-  }, [selClass, detailStudent]);
 
-  const handleAddClass = () => {
-    const name = prompt("Sınıf Adı:");
-    const cleaned = sanitize(name);
-    if (cleaned) {
-      setClasses([...classes, { id: generateId(), name: cleaned }]);
-    }
-  };
-
-  const handleDeleteClass = (id) => {
-    if (confirm("Bu sınıf silinecek. Emin misiniz?")) {
-      setClasses(classes.filter(c => c.id !== id));
-      storage.remove(`s13_${id}`);
-      storage.remove(`h13_${id}`);
-      storage.remove(`e13_${id}`);
-    }
-  };
-
-  const handleAddStudent = (name) => {
-    saveStudents([...students, {
-      id: generateId(),
-      name,
-      puan: 0,
-      logs: []
-    }]);
-  };
-
-  const handleAddBulkStudents = (names) => {
-    const newStudents = names.map(name => ({
-      id: generateId(),
-      name,
-      puan: 0,
-      logs: []
-    }));
-    saveStudents([...students, ...newStudents]);
-  };
-
-  const handleDeleteStudent = (id) => {
-    if (confirm("Bu öğrenci silinecek. Emin misiniz?")) {
-      saveStudents(students.filter(s => s.id !== id));
-    }
-  };
-
-  return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-slate-50">
-        <nav className="bg-slate-900 text-white p-5 flex justify-between items-center border-b-4 border-indigo-600">
-          <h1
-            onClick={() => {
-              setPage('dashboard');
-              setSelClass(null);
-            }}
-            className="text-xl font-bold cursor-pointer flex items-center gap-2"
-            role="button"
-            tabIndex={0}
-          >
-            Asistan <span className="text-indigo-400">Pro V13</span>
-          </h1>
-          {selClass && (
-            <div className="flex items-center gap-3">
-              <span className="bg-indigo-600 px-4 py-1 rounded-lg text-xs font-bold">
-                {selClass.name}
-              </span>
-            </div>
-          )}
-        </nav>
-
-        <main className="p-6 max-w-7xl mx-auto">
-          {page === 'dashboard' && (
-            <Dashboard
-              classes={classes}
-              onAddClass={handleAddClass}
-              onSelectClass={(c) => {
-                setSelClass(c);
-                setPage('list');
-              }}
-              onDeleteClass={handleDeleteClass}
-            />
-          )}
-
-          {selClass && (
-            <>
-              <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl w-fit shadow-sm border mx-auto md:mx-0 mb-6">
-                <Tab active={page === 'list'} onClick={() => setPage('list')} icon={Users} label="Öğrenci" />
-                <Tab active={page === 'hw'} onClick={() => setPage('hw')} icon={BookOpen} label="Ödev" />
-                <Tab active={page === 'wheel'} onClick={() => setPage('wheel')} icon={Sparkles} label="Kura" />
-                <Tab active={page === 'exam'} onClick={() => setPage('exam')} icon={FileText} label="Sınav" />
-                <Tab active={page === 'stats'} onClick={() => setPage('stats')} icon={BarChart3} label="Analiz" />
-                <Tab active={page === 'rank'} onClick={() => setPage('rank')} icon={Trophy} label="Skor" />
-              </div>
-
-              {page === 'list' && (
-                <StudentList
-                  students={students}
-                  onAddStudent={handleAddStudent}
-                  onAddBulk={handleAddBulkStudents}
-                  onDeleteStudent={handleDeleteStudent}
-                />
-              )}
-
-              {page === 'hw' && (
-                <HomeworkManager
-                  students={students}
-                  homeworks={homeworks}
-                  onSaveHomeworks={saveHomeworks}
-                  onAddLog={addLog}
-                />
-              )}
-
-              {page === 'wheel' && (
-                <WheelOfFortune
-                  students={students}
-                  drawnStudents={drawnStudents}
-                  onDraw={(id) => setDrawnStudents([...drawnStudents, id])}
-                  onReset={() => setDrawnStudents([])}
-                  onAddLog={addLog}
-                />
-              )}
-
-              {page === 'exam' && (
-                <ExamManager
-                  students={students}
-                  exams={exams}
-                  onSaveExams={saveExams}
-                />
-              )}
-
-              {page === 'stats' && (
-                <StatsPage
-                  students={students}
-                  exams={exams}
-                  onShowDetail={setDetailStudent}
-                />
-              )}
-
-              {page === 'rank' && (
-                <div className="max-w-4xl mx-auto space-y-4 pt-10">
-                  <h2 className="text-center font-bold text-4xl uppercase mb-10 text-slate-800 flex items-center justify-center gap-2">
-                    <Trophy className="w-10 h-10 text-yellow-500" />
-                    Liderlik Tablosu
-                  </h2>
-                  {students.sort((a, b) => b.puan - a.puan).map((s, i) => (
-                    <div
-                      key={s.id}
-                      onClick={() => setDetailStudent(s)}
-                      className="bg-white p-8 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 hover:scale-[1.02] transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-8">
-                        <span className="text-5xl font-bold text-slate-100">#{i + 1}</span>
-                        <h3 className="text-xl font-bold text-slate-700">{s.name}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-indigo-600 bg-indigo-50 px-10 py-4 rounded-3xl">
-                        {s.puan || 0} PUAN
-                      </div>
-                    </div>
-                  ))}
-                  {students.length === 0 && (
-                    <div className="text-center py-12 text-slate-400">
-                      <Trophy className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                      <p>Henüz öğrenci yok</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </main>
-
-        {detailStudent && (
-          <StudentDetail
-            student={detailStudent}
-            students={students}
-            exams={exams}
-            onClose={() => setDetailStudent(null)}
-            onAddLog={addLog}
-          />
-        )}
-      </div>
-    </ErrorBoundary>
-  );
-}
-
-export default App;
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
