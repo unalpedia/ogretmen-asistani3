@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, Users, BookOpen, Trophy, BarChart3, FileText, Sparkles, Plus, X, Save, Trash2 } from 'lucide-react';
 
 // ============================================================================
@@ -18,7 +18,8 @@ const storage = {
     try {
       const serialized = JSON.stringify(value);
       if (serialized.length > 4 * 1024 * 1024) {
-        throw new Error('Veri çok büyük (max 4MB)');
+        alert('Veri çok büyük (max 4MB)');
+        return { success: false };
       }
       localStorage.setItem(key, serialized);
       return { success: true };
@@ -73,10 +74,7 @@ const useLocalStorageState = (key, defaultValue) => {
   const [state, setState] = useState(() => storage.get(key, defaultValue));
 
   useEffect(() => {
-    const result = storage.set(key, state);
-    if (!result.success) {
-      console.error('Veri kaydedilemedi:', result.error);
-    }
+    storage.set(key, state);
   }, [key, state]);
 
   return [state, setState];
@@ -137,7 +135,8 @@ const HybridChart = ({ stdId, students, exams }) => {
   const logs = [...(std?.logs || [])].reverse().slice(-10);
   const puanPoints = logs.map((l, i) => {
     const x = padding + (i * (width - 2 * padding) / Math.max(logs.length - 1, 1));
-    const y = height - padding - ((l.currentTotal / 1000) * (height - 2 * padding));
+    const maxPuan = Math.max(...logs.map(log => log.currentTotal), 100);
+    const y = height - padding - ((l.currentTotal / maxPuan) * (height - 2 * padding));
     return { x, y };
   });
 
@@ -334,6 +333,318 @@ const StudentList = ({ students, onAddStudent, onAddBulk, onDeleteStudent }) => 
   );
 };
 
+const HomeworkManager = ({ students, homeworks, onSaveHomeworks, onAddLog }) => {
+  const [hwTitle, setHwTitle] = useState('');
+
+  const handleAddHomework = () => {
+    const title = sanitize(hwTitle);
+    if (title) {
+      onSaveHomeworks([...homeworks, { id: generateId(), title, results: {} }]);
+      setHwTitle('');
+    }
+  };
+
+  const handleBulkUpdate = (hwId, status) => {
+    const hw = homeworks.find(h => h.id === hwId);
+    const points = status === 'done' ? 10 : status === 'partial' ? 5 : 0;
+    
+    students.forEach(s => {
+      const prev = hw.results?.[s.id] || 'none';
+      const prevPoints = prev === 'done' ? 10 : prev === 'partial' ? 5 : 0;
+      const diff = points - prevPoints;
+      
+      if (diff !== 0) {
+        onAddLog(s.id, 'ÖDEV', diff, hw.title);
+      }
+    });
+
+    const newResults = {};
+    students.forEach(s => {
+      newResults[s.id] = status;
+    });
+
+    onSaveHomeworks(homeworks.map(h => 
+      h.id === hwId ? { ...h, results: newResults } : h
+    ));
+  };
+
+  const handleIndividualUpdate = (hwId, stdId, status) => {
+    const hw = homeworks.find(h => h.id === hwId);
+    const prev = hw?.results?.[stdId] || 'none';
+    const points = status === 'done' ? 10 : status === 'partial' ? 5 : 0;
+    const prevPoints = prev === 'done' ? 10 : prev === 'partial' ? 5 : 0;
+    const diff = points - prevPoints;
+
+    if (diff !== 0) {
+      onAddLog(stdId, 'ÖDEV', diff, hw.title);
+    }
+
+    onSaveHomeworks(homeworks.map(h =>
+      h.id === hwId ? { ...h, results: { ...h.results, [stdId]: status } } : h
+    ));
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-10 shadow-2xl overflow-x-auto">
+      <div className="flex justify-between items-center mb-8 border-b pb-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <BookOpen className="w-6 h-6" />
+          Ödev Yönetimi
+        </h2>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={hwTitle}
+            onChange={(e) => setHwTitle(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleAddHomework()}
+            placeholder="Ödev konusu..."
+            className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
+            maxLength={50}
+          />
+          <button
+            onClick={handleAddHomework}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {homeworks.length > 0 ? (
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="text-left pb-4 font-bold text-xs text-slate-400">ÖĞRENCİ</th>
+              {homeworks.map(h => (
+                <th key={h.id} className="px-2">
+                  <div className="flex flex-col items-center gap-1 mb-4">
+                    <span className="text-[10px] font-bold text-indigo-600 mb-2">{h.title}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleBulkUpdate(h.id, 'done')}
+                        className="text-[8px] bg-green-100 text-green-600 px-2 py-1 rounded font-bold"
+                      >
+                        TAM
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdate(h.id, 'partial')}
+                        className="text-[8px] bg-yellow-100 text-yellow-600 px-2 py-1 rounded font-bold"
+                      >
+                        AZ
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdate(h.id, 'none')}
+                        className="text-[8px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold"
+                      >
+                        YOK
+                      </button>
+                    </div>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {students.map(s => (
+              <tr key={s.id} className="border-t hover:bg-slate-50">
+                <td className="py-3 text-xs font-bold">{s.name}</td>
+                {homeworks.map(h => (
+                  <td key={h.id} className="text-center">
+                    <div className="flex gap-1 justify-center">
+                      {['done', 'partial', 'none'].map(st => (
+                        <button
+                          key={st}
+                          onClick={() => handleIndividualUpdate(h.id, s.id, st)}
+                          className={`px-2 py-1 rounded-lg text-[8px] font-bold transition-all ${
+                            h.results?.[s.id] === st
+                              ? st === 'done'
+                                ? 'bg-green-500 text-white'
+                                : st === 'partial'
+                                ? 'bg-yellow-500 text-white'
+                                : 'bg-red-500 text-white'
+                              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                          }`}
+                        >
+                          {st === 'done' ? 'TAM' : st === 'partial' ? 'AZ' : 'YOK'}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="text-center py-12 text-slate-400">
+          <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-20" />
+          <p>Henüz ödev eklenmedi</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ExamManager = ({ students, exams, onSaveExams }) => {
+  const [examTitle, setExamTitle] = useState('');
+  const [examQCount, setExamQCount] = useState('');
+
+  const handleAddExam = () => {
+    const title = sanitize(examTitle);
+    const qCount = parseInt(examQCount);
+    
+    if (title && qCount > 0) {
+      onSaveExams([...exams, { id: generateId(), title, qCount, results: {} }]);
+      setExamTitle('');
+      setExamQCount('');
+    }
+  };
+
+  const handleUpdateResult = (examId, stdId, field, value) => {
+    onSaveExams(exams.map(e => {
+      if (e.id === examId) {
+        const currentResult = e.results?.[stdId] || { d: 0, y: 0, net: 0 };
+        const d = field === 'd' ? Number(value) || 0 : currentResult.d;
+        const y = field === 'y' ? Number(value) || 0 : currentResult.y;
+        const net = d - (y / 3);
+        
+        return {
+          ...e,
+          results: {
+            ...e.results,
+            [stdId]: { d, y, net }
+          }
+        };
+      }
+      return e;
+    }));
+  };
+
+  return (
+    <div className="bg-white rounded-3xl p-10 shadow-2xl">
+      <div className="flex justify-between items-center mb-8 border-b pb-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <FileText className="w-6 h-6" />
+          Deneme Sınavları
+        </h2>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={examTitle}
+            onChange={(e) => setExamTitle(e.target.value)}
+            placeholder="Sınav konusu..."
+            className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
+            maxLength={50}
+          />
+          <input
+            type="number"
+            value={examQCount}
+            onChange={(e) => setExamQCount(e.target.value)}
+            placeholder="Soru sayısı"
+            className="w-32 p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500"
+            min="1"
+          />
+          <button
+            onClick={handleAddExam}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {exams.map(e => (
+          <div key={e.id} className="p-6 bg-slate-50 rounded-3xl border">
+            <h3 className="font-bold text-indigo-700 mb-4">
+              {e.title} <span className="text-slate-400 ml-2">({e.qCount} Soru)</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {students.map(s => (
+                <div key={s.id} className="bg-white p-3 rounded-xl border flex flex-col gap-2">
+                  <span className="font-bold text-[10px] truncate">{s.name}</span>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="D"
+                      className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                      defaultValue={e.results?.[s.id]?.d || ''}
+                      onBlur={(ev) => handleUpdateResult(e.id, s.id, 'd', ev.target.value)}
+                      min="0"
+                      max={e.qCount}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Y"
+                      className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                      defaultValue={e.results?.[s.id]?.y || ''}
+                      onBlur={(ev) => handleUpdateResult(e.id, s.id, 'y', ev.target.value)}
+                      min="0"
+                      max={e.qCount}
+                    />
+                  </div>
+                  <div className="text-[9px] text-center font-bold text-indigo-400">
+                    NET: {(e.results?.[s.id]?.net || 0).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {exams.length === 0 && (
+          <div className="text-center py-12 text-slate-400">
+            <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
+            <p>Henüz sınav eklenmedi</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const StatsPage = ({ students, exams, onShowDetail }) => {
+  const sortedStudents = [...students].sort((a, b) => {
+    const getAvg = (std) => {
+      const results = exams.map(e => e.results?.[std.id]).filter(r => r);
+      return results.length ? results.reduce((sum, r) => sum + r.net, 0) / results.length : 0;
+    };
+    return getAvg(b) - getAvg(a);
+  });
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-center font-bold text-3xl mb-6 flex items-center justify-center gap-2">
+        <BarChart3 className="w-8 h-8 text-indigo-600" />
+        Başarı Analizi (Ort. Net)
+      </h2>
+      {sortedStudents.map(s => {
+        const results = exams.map(e => e.results?.[s.id]).filter(r => r);
+        const avg = results.length ? (results.reduce((sum, r) => sum + r.net, 0) / results.length).toFixed(2) : "0.00";
+        
+        return (
+          <div
+            key={s.id}
+            onClick={() => onShowDetail(s)}
+            className="bg-white p-6 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 cursor-pointer hover:bg-slate-50 transition-all"
+          >
+            <span className="text-xl font-bold text-slate-700">{s.name}</span>
+            <div className="bg-indigo-50 px-6 py-2 rounded-2xl text-center">
+              <p className="text-[9px] font-bold text-slate-400">Ortalama Net</p>
+              <p className="text-xl font-bold text-indigo-600">{avg}</p>
+            </div>
+          </div>
+        );
+      })}
+      {students.length === 0 && (
+        <div className="text-center py-12 text-slate-400">
+          <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-20" />
+          <p>Henüz öğrenci yok</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const WheelOfFortune = ({ students, drawnStudents, onDraw, onReset, onAddLog }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [winner, setWinner] = useState(null);
@@ -423,6 +734,134 @@ const WheelOfFortune = ({ students, drawnStudents, onDraw, onReset, onAddLog }) 
   );
 };
 
+const StudentDetail = ({ student, students, exams, onClose, onAddLog }) => {
+  const [manualPoints, setManualPoints] = useState('');
+
+  const handleAddManualPoints = () => {
+    const points = parseInt(manualPoints);
+    if (points && points !== 0) {
+      onAddLog(student.id, 'MANUEL', points, 'Dışarıdan Giriş');
+      setManualPoints('');
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-4xl rounded-3xl p-10 shadow-2xl relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6 border-b pb-4">
+          <h2 className="text-3xl font-bold text-slate-800">
+            {student.name} <span className="text-indigo-600">Gelişim Karnesi</span>
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-slate-300 hover:text-red-500 text-4xl transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        {exams.length > 0 && (
+          <div className="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex gap-4 text-[9px] font-bold">
+                <span className="flex items-center gap-1 text-emerald-500">
+                  <div className="w-4 h-1 bg-emerald-500"></div> Puan Trendi
+                </span>
+                <span className="flex items-center gap-1 text-orange-500">
+                  <div className="w-4 h-1 bg-orange-500"></div> Başarı Yüzdesi (%)
+                </span>
+              </div>
+            </div>
+            <HybridChart stdId={student.id} students={students} exams={exams} />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="p-6 bg-slate-900 text-white rounded-3xl text-center shadow-lg">
+            <p className="text-[10px] font-bold opacity-50 uppercase mb-1">TOPLAM PUAN</p>
+            <p className="text-4xl font-bold">{student.puan || 0} P</p>
+          </div>
+          <div className="p-4 flex gap-2 bg-indigo-50 rounded-3xl">
+            <input
+              type="number"
+              value={manualPoints}
+              onChange={(e) => setManualPoints(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddManualPoints()}
+              className="w-full bg-white border-2 border-indigo-100 rounded-2xl p-4 text-center font-bold text-xl outline-none focus:border-indigo-500 transition-all"
+              placeholder="+ / -"
+            />
+            <button
+              onClick={handleAddManualPoints}
+              className="bg-indigo-600 text-white px-8 rounded-2xl font-bold shadow-lg hover:bg-indigo-500 transition-all"
+            >
+              EKLE
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t pt-8">
+          <div>
+            <h4 className="text-[11px] font-bold uppercase text-indigo-600 mb-4 flex items-center gap-2">
+              🏆 Puan Hareketleri
+            </h4>
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+              {(student.logs || []).map((l, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold border hover:border-indigo-100"
+                >
+                  <div>
+                    <span className="text-slate-400 block text-[8px] font-normal">{l.date}</span>
+                    {l.reason}
+                  </div>
+                  <span className={l.amount > 0 ? 'text-emerald-500' : 'text-red-500'}>
+                    {l.amount > 0 ? `+${l.amount}` : l.amount} P
+                  </span>
+                </div>
+              ))}
+              {(!student.logs || student.logs.length === 0) && (
+                <p className="text-slate-400 text-center py-4">Henüz kayıt yok</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-[11px] font-bold uppercase text-indigo-600 mb-4 flex items-center gap-2">
+              📊 Deneme Performansı
+            </h4>
+            <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
+              {exams.map(e => (
+                <div
+                  key={e.id}
+                  className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-xl text-[10px] font-bold border hover:border-indigo-100"
+                >
+                  <span>{e.title}</span>
+                  <div className="text-right">
+                    <span className="text-slate-900 block">
+                      {(e.results?.[student.id]?.net || 0).toFixed(2)} Net
+                    </span>
+                    <span className="text-orange-500 text-[8px]">
+                      %{(((e.results?.[student.id]?.net || 0) / e.qCount) * 100).toFixed(0)} Başarı
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {exams.length === 0 && (
+                <p className="text-slate-400 text-center py-4">Henüz sınav yok</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ============================================================================
 // MAIN APP
 // ============================================================================
@@ -435,6 +874,7 @@ function App() {
   const [homeworks, setHomeworks] = useState([]);
   const [exams, setExams] = useState([]);
   const [drawnStudents, setDrawnStudents] = useState([]);
+  const [detailStudent, setDetailStudent] = useState(null);
 
   useEffect(() => {
     if (selClass) {
@@ -446,39 +886,56 @@ function App() {
 
   const saveStudents = useCallback((newStudents) => {
     setStudents(newStudents);
-    storage.set(`s13_${selClass.id}`, newStudents);
+    if (selClass) {
+      storage.set(`s13_${selClass.id}`, newStudents);
+    }
   }, [selClass]);
 
   const saveHomeworks = useCallback((newHomeworks) => {
     setHomeworks(newHomeworks);
-    storage.set(`h13_${selClass.id}`, newHomeworks);
+    if (selClass) {
+      storage.set(`h13_${selClass.id}`, newHomeworks);
+    }
   }, [selClass]);
 
   const saveExams = useCallback((newExams) => {
     setExams(newExams);
-    storage.set(`e13_${selClass.id}`, newExams);
+    if (selClass) {
+      storage.set(`e13_${selClass.id}`, newExams);
+    }
   }, [selClass]);
 
   const addLog = useCallback((stdId, type, amount, reason) => {
-    const updated = students.map(s => {
-      if (s.id === stdId) {
-        const newPuan = (Number(s.puan) || 0) + Number(amount);
-        return {
-          ...s,
-          puan: newPuan,
-          logs: [{
-            date: new Date().toLocaleString('tr-TR'),
-            type,
-            amount: Number(amount),
-            reason: sanitize(reason),
-            currentTotal: newPuan
-          }, ...(s.logs || [])]
-        };
+    setStudents(prevStudents => {
+      const updated = prevStudents.map(s => {
+        if (s.id === stdId) {
+          const newPuan = (Number(s.puan) || 0) + Number(amount);
+          return {
+            ...s,
+            puan: newPuan,
+            logs: [{
+              date: new Date().toLocaleString('tr-TR'),
+              type,
+              amount: Number(amount),
+              reason: sanitize(reason),
+              currentTotal: newPuan
+            }, ...(s.logs || [])]
+          };
+        }
+        return s;
+      });
+      
+      if (selClass) {
+        storage.set(`s13_${selClass.id}`, updated);
       }
-      return s;
+      
+      if (detailStudent?.id === stdId) {
+        setDetailStudent(updated.find(x => x.id === stdId));
+      }
+      
+      return updated;
     });
-    saveStudents(updated);
-  }, [students, saveStudents]);
+  }, [selClass, detailStudent]);
 
   const handleAddClass = () => {
     const name = prompt("Sınıf Adı:");
@@ -566,6 +1023,7 @@ function App() {
                 <Tab active={page === 'hw'} onClick={() => setPage('hw')} icon={BookOpen} label="Ödev" />
                 <Tab active={page === 'wheel'} onClick={() => setPage('wheel')} icon={Sparkles} label="Kura" />
                 <Tab active={page === 'exam'} onClick={() => setPage('exam')} icon={FileText} label="Sınav" />
+                <Tab active={page === 'stats'} onClick={() => setPage('stats')} icon={BarChart3} label="Analiz" />
                 <Tab active={page === 'rank'} onClick={() => setPage('rank')} icon={Trophy} label="Skor" />
               </div>
 
@@ -575,6 +1033,15 @@ function App() {
                   onAddStudent={handleAddStudent}
                   onAddBulk={handleAddBulkStudents}
                   onDeleteStudent={handleDeleteStudent}
+                />
+              )}
+
+              {page === 'hw' && (
+                <HomeworkManager
+                  students={students}
+                  homeworks={homeworks}
+                  onSaveHomeworks={saveHomeworks}
+                  onAddLog={addLog}
                 />
               )}
 
@@ -588,6 +1055,22 @@ function App() {
                 />
               )}
 
+              {page === 'exam' && (
+                <ExamManager
+                  students={students}
+                  exams={exams}
+                  onSaveExams={saveExams}
+                />
+              )}
+
+              {page === 'stats' && (
+                <StatsPage
+                  students={students}
+                  exams={exams}
+                  onShowDetail={setDetailStudent}
+                />
+              )}
+
               {page === 'rank' && (
                 <div className="max-w-4xl mx-auto space-y-4 pt-10">
                   <h2 className="text-center font-bold text-4xl uppercase mb-10 text-slate-800 flex items-center justify-center gap-2">
@@ -597,7 +1080,8 @@ function App() {
                   {students.sort((a, b) => b.puan - a.puan).map((s, i) => (
                     <div
                       key={s.id}
-                      className="bg-white p-8 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 hover:scale-[1.02] transition-all"
+                      onClick={() => setDetailStudent(s)}
+                      className="bg-white p-8 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 hover:scale-[1.02] transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-8">
                         <span className="text-5xl font-bold text-slate-100">#{i + 1}</span>
@@ -619,6 +1103,16 @@ function App() {
             </>
           )}
         </main>
+
+        {detailStudent && (
+          <StudentDetail
+            student={detailStudent}
+            students={students}
+            exams={exams}
+            onClose={() => setDetailStudent(null)}
+            onAddLog={addLog}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
