@@ -15,66 +15,304 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    :root { --main-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; --accent: #6366f1; }
-    body { font-family: var(--main-font); background: #f8fafc; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    /* ===== V16 PREMIUM THEME ===== */
+    :root {
+      --main-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --accent: #818cf8;
+      --accent2: #06b6d4;
+      --bg-base: #0f1117;
+      --bg-surface: #16181f;
+      --bg-card: #1e2130;
+      --bg-card-hover: #252840;
+      --border: rgba(129,140,248,0.12);
+      --border-bright: rgba(129,140,248,0.28);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+      --glow-accent: rgba(99,102,241,0.18);
+      --glow-cyan: rgba(6,182,212,0.14);
+      --radius-xl: 18px;
+      --radius-2xl: 24px;
+    }
 
-    .scroller-wrap { width: 760px; max-width: 96vw; text-align:center; }
-    .scroller-window { height: 140px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:14px; background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(249,250,251,0.98)); box-shadow: 0 10px 30px rgba(2,6,23,0.08); border: 1px solid rgba(15,23,42,0.04); position:relative; }
-    .name-wrapper { width: 100%; display:flex; align-items:center; justify-content:center; }
-    .name-item { display:block; width: 88%; text-align: center; font-weight:800; font-size:32px; color:#0f172a; padding:10px 22px; border-radius:12px; transition: all 220ms ease; user-select:none; transform-origin:center; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
-    .name-item.dim { opacity:0.28; transform: scale(0.96); filter: blur(0.3px); }
-    .name-item.active { transform: scale(1.18); color: #fff; padding: 14px 26px; border-radius: 12px; text-shadow: 0 8px 18px rgba(0,0,0,0.18); }
+    *, *::before, *::after { box-sizing: border-box; }
 
+    body {
+      font-family: var(--main-font);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+    }
+
+    /* Subtle animated mesh background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(99,102,241,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 100%, rgba(6,182,212,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #root { position: relative; z-index: 1; }
+
+    /* ===== NAV ===== */
+    .ap-nav {
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(129,140,248,0.06), 0 8px 32px rgba(0,0,0,0.24);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .ap-nav-logo { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; cursor: pointer; }
+    .ap-nav-logo .v { background: linear-gradient(90deg, #818cf8, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .ap-class-chip {
+      background: linear-gradient(90deg, rgba(99,102,241,0.22), rgba(6,182,212,0.16));
+      border: 1px solid var(--border-bright);
+      color: #c7d2fe;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .ap-btn-ghost {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      transition: all .16s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .ap-btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); border-color: var(--border-bright); }
+    .ap-btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+      transition: all .16s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .ap-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.4); }
+
+    /* ===== TABS ===== */
+    .ap-tabs {
+      background: rgba(22,24,31,0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+    .ap-tab {
+      padding: 8px 16px;
+      border-radius: 13px;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: all .18s;
+      white-space: nowrap;
+    }
+    .ap-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
+    .ap-tab.active {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+    }
+
+    /* ===== CARDS ===== */
+    .ap-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      transition: all .2s;
+    }
+    .ap-card:hover { border-color: var(--border-bright); }
+    .ap-card-glow {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.06), 0 8px 32px rgba(0,0,0,0.24);
+    }
+
+    /* ===== DASHBOARD ===== */
+    .dash-class-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all .22s cubic-bezier(.4,0,.2,1);
+    }
+    .dash-class-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity .22s;
+    }
+    .dash-class-card:hover { transform: translateY(-6px); border-color: rgba(129,140,248,0.35); box-shadow: 0 20px 50px rgba(0,0,0,0.35), 0 0 0 1px rgba(99,102,241,0.15); }
+    .dash-class-card:hover::before { opacity: 1; }
+    .dash-class-card .accent-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #06b6d4);
+    }
+    .dash-add-card {
+      border: 2px dashed rgba(99,102,241,0.22);
+      border-radius: var(--radius-2xl);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 14px;
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 120px;
+      cursor: pointer;
+    }
+    .dash-add-card:hover { border-color: rgba(99,102,241,0.5); color: var(--accent); background: rgba(99,102,241,0.04); }
+
+    /* ===== STUDENT CARDS ===== */
+    .student-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: all .18s;
+    }
+    .student-card:hover { border-color: var(--border-bright); background: var(--bg-card-hover); }
+
+    /* ===== LEVEL BADGE ===== */
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 999px;
+      font-weight: 800; font-size: 11px;
+      background: linear-gradient(90deg, rgba(99,102,241,0.18), rgba(6,182,212,0.12));
+      color: #c7d2fe;
+      border: 1px solid rgba(129,140,248,0.18);
+    }
+    .level-progress-mini { height: 6px; width: 120px; background: rgba(99,102,241,0.12); border-radius: 999px; overflow: hidden; }
+    .level-progress-mini > i { display: block; height: 100%; background: linear-gradient(90deg, #06b6d4, #818cf8); border-radius: 999px; }
+
+    /* ===== INPUTS ===== */
+    .ap-input {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-family: var(--main-font);
+      font-size: 14px;
+      outline: none;
+      transition: border .16s;
+      width: 100%;
+    }
+    .ap-input::placeholder { color: var(--text-muted); }
+    .ap-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+    /* ===== TABLE ===== */
+    .ap-table th { color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .ap-table tr { border-color: var(--border) !important; }
+    .ap-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ===== SCROLLER (KURA) ===== */
+    .scroller-wrap { width: 760px; max-width: 96vw; text-align: center; }
+    .scroller-window {
+      height: 140px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; border-radius: 16px;
+      background: linear-gradient(180deg, rgba(30,33,48,0.98), rgba(22,24,31,0.98));
+      box-shadow: 0 0 0 1px var(--border), 0 12px 40px rgba(0,0,0,0.3); position: relative;
+    }
+    .name-wrapper { width: 100%; display: flex; align-items: center; justify-content: center; }
+    .name-item { display: block; width: 88%; text-align: center; font-weight: 800; font-size: 32px; color: var(--text-primary); padding: 10px 22px; border-radius: 12px; transition: all 220ms ease; user-select: none; transform-origin: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+    .name-item.dim { opacity: 0.22; transform: scale(0.96); filter: blur(0.3px); }
+    .name-item.active { transform: scale(1.18); color: #fff; padding: 14px 26px; border-radius: 12px; text-shadow: 0 8px 18px rgba(0,0,0,0.4); }
+
+    /* ===== TIMER ===== */
     .chart-container { height: 220px; }
-    .nav-action { display:inline-flex; gap:8px; align-items:center; }
-    .small-btn { padding:6px 10px; border-radius:8px; font-weight:700; font-size:13px; }
-    .class-card { transition: transform .18s ease, box-shadow .18s ease; }
-    .class-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 16px 40px rgba(2,6,23,0.12); }
+    .nav-action { display: inline-flex; gap: 8px; align-items: center; }
+    .small-btn { padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 13px; }
+    .timer-card {
+      width: 520px; max-width: 92vw;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 22px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .timer-center { width: 320px; height: 320px; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
+    .timer-value { position: absolute; text-align: center; }
+    .timer-value .big { font-size: 58px; font-weight: 800; letter-spacing: -2px; color: var(--text-primary); }
+    .timer-value .small { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
 
-    .timer-card { width: 520px; max-width: 92vw; background: linear-gradient(180deg,#ffffff, #fbfdff); border-radius: 18px; padding: 22px; box-shadow: 0 20px 40px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.6); border: 1px solid rgba(15,23,42,0.04); }
-    .timer-center { width: 320px; height: 320px; display:flex; align-items:center; justify-content:center; margin: 0 auto; position: relative; }
-    .timer-value { position:absolute; text-align:center; }
-    .timer-value .big { font-size:58px; font-weight:800; letter-spacing: -2px; }
-    .timer-value .small { font-size:14px; color:#64748b; margin-top:6px; }
+    /* ===== QUICK FINGER ===== */
+    .quick-finger { background: var(--bg-card); padding: 12px; border-radius: 14px; border: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .student-chip { padding: 8px 12px; border-radius: 12px; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+    .student-chip .name { font-size: 13px; }
+    .student-chip .award { font-size: 12px; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
 
-    .quick-finger { background: #fff; padding: 12px; border-radius: 14px; box-shadow: 0 8px 24px rgba(2,6,23,0.06); display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-    .student-chip { padding:8px 12px; border-radius:12px; font-weight:700; display:inline-flex; gap:8px; align-items:center; }
-    .student-chip .name { font-size:13px; }
-    .student-chip .award { font-size:12px; padding:6px 8px; border-radius:8px; cursor:pointer; }
+    /* ===== LEADERBOARD SCROLLER ===== */
+    .leaderboard-scroller {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 58px;
+      background: linear-gradient(90deg, rgba(10,11,16,0.97) 0%, rgba(49,46,129,0.97) 50%, rgba(10,11,16,0.97) 100%);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(99,102,241,0.2);
+      color: white; display: flex; align-items: center; overflow: hidden; z-index: 998;
+      box-shadow: 0 -4px 30px rgba(0,0,0,0.4);
+    }
+    .leaderboard-scroller-content { display: flex; gap: 24px; padding: 0 20px; white-space: nowrap; animation: scrollLB 60s linear infinite; }
+    @keyframes scrollLB { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+    .leaderboard-item { display: inline-flex; gap: 10px; align-items: center; flex-shrink: 0; padding: 8px 16px; background: rgba(255,255,255,0.06); border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); font-weight: 700; }
+    .leaderboard-rank { font-weight: 900; font-size: 16px; min-width: 28px; color: rgba(199,210,254,0.7); }
+    .leaderboard-name { min-width: 110px; font-size: 13px; }
+    .leaderboard-points { color: #fbbf24; font-weight: 800; font-size: 13px; }
 
-    .level-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 8px; border-radius:999px; font-weight:800; font-size:12px; background: linear-gradient(90deg,#eef2ff,#fff); color:#334155; border:1px solid rgba(99,102,241,0.08); }
-    .level-progress-mini { height:8px; width:140px; background:#eef2ff; border-radius:999px; overflow:hidden; }
-    .level-progress-mini > i { display:block; height:100%; background:linear-gradient(90deg,#06b6d4,#6366f1); }
+    /* ===== TOAST / OVERLAY ===== */
+    .toast-notice { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(90deg,#06b6d4,#6366f1); color: white; padding: 10px 14px; border-radius: 10px; font-weight: 800; box-shadow: 0 12px 34px rgba(0,0,0,0.3); }
+    .exam-overlay { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(135deg, #1e1b4b, #312e81); border: 1px solid rgba(99,102,241,0.4); color: white; padding: 18px 28px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center; min-width: 420px; max-width: 96vw; }
+    .exam-overlay .label { font-weight: 800; font-size: 18px; }
+    .exam-overlay .time { font-weight: 900; font-size: 48px; margin-top: 6px; background: linear-gradient(90deg, #818cf8, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .exam-overlay .controls { margin-top: 10px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .timer-badge-global { display: none; }
 
-    /* V15: LEADERBOARD SCROLLER */
-    .leaderboard-scroller { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(90deg, #1e293b 0%, #4f46e5 50%, #1e293b 100%); color: white; display: flex; align-items: center; overflow: hidden; z-index: 998; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
-    .leaderboard-scroller-content { display: flex; gap: 30px; padding: 0 20px; white-space: nowrap; animation: scrollLB 60s linear infinite; }
-    @keyframes scrollLB { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-    .leaderboard-item { display: inline-flex; gap: 12px; align-items: center; flex-shrink: 0; padding: 10px 18px; background: rgba(255,255,255,0.1); border-radius: 20px; backdrop-filter: blur(10px); font-weight: 700; }
-    .leaderboard-rank { font-weight: 900; font-size: 18px; min-width: 32px; }
-    .leaderboard-name { min-width: 130px; }
-    .leaderboard-points { color: #fbbf24; font-weight: 800; }
+    /* ===== ÖDEV RAPOR PRINT ===== */
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff !important; color: #000 !important; }
+      .ap-nav, .leaderboard-scroller, .ap-tabs, .no-print { display: none !important; }
+      .hw-report-panel { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+    }
 
-    @media (max-width:900px) {
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
       .scroller-wrap { width: 92vw; }
       .scroller-window { height: 100px; }
       .name-item { font-size: 20px; }
       .name-item.active { transform: scale(1.12); }
       .timer-card { padding: 14px; }
       .timer-center { width: 260px; height: 260px; }
-      .timer-value .big { font-size:42px; }
+      .timer-value .big { font-size: 42px; }
     }
 
-    @media print { body { -webkit-print-color-adjust: exact; } }
-
-    .toast-notice { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(90deg,#06b6d4,#6366f1); color: white; padding: 10px 14px; border-radius: 10px; font-weight:800; box-shadow:0 12px 34px rgba(2,6,23,0.12); }
-
-    .exam-overlay { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(90deg,#06b6d4,#6366f1); color: white; padding: 18px 28px; border-radius: 14px; box-shadow: 0 20px 60px rgba(6,78,120,0.18); text-align: center; min-width: 420px; max-width: 96vw; }
-    .exam-overlay .label { font-weight:800; font-size:18px; }
-    .exam-overlay .time { font-weight:900; font-size:48px; margin-top:6px; }
-    .exam-overlay .controls { margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-
-    .timer-badge-global { display:none; }
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(129,140,248,0.2); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(129,140,248,0.4); }
   </style>
 </head>
 <body class="antialiased">
@@ -620,20 +858,39 @@
       </button>
     );
 
-    // PART2 BITTI - PART3'E GEÇ
     // ==================== DASHBOARD ====================
     const Dashboard = ({ classes, onAddClass, onSelectClass, onDeleteClass }) => (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
-        <button onClick={onAddClass} className="h-28 border-2 border-dashed border-slate-300 rounded-3xl font-bold text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 small-btn">
-          <Plus className="w-5 h-5" /> Yeni Sınıf
-        </button>
-        {classes.map(c => (
-          <div key={c.id} onClick={() => onSelectClass(c)} className="bg-white p-10 rounded-3xl shadow-xl border-b-8 border-indigo-600 hover:-translate-y-2 transition-all cursor-pointer relative group">
-            <button onClick={(e)=>{ e.stopPropagation(); onDeleteClass(c.id); }} className="absolute top-5 right-5 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">🗑</button>
-            <h3 className="text-3xl font-extrabold text-slate-800">{c.name}</h3>
-            <p className="mt-3 text-xs text-slate-400">Tıklayın — sınıf detayları için</p>
-          </div>
-        ))}
+      <div className="pt-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-extrabold" style={{background:'linear-gradient(90deg,#f1f5f9,#818cf8)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>Sınıflarım</h2>
+          <p className="mt-1 text-sm" style={{color:'var(--text-muted)'}}>Yönetmek istediğin sınıfı seç ya da yeni bir tane oluştur.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <button onClick={onAddClass} className="dash-add-card gap-2">
+            <Plus className="w-5 h-5" /> Yeni Sınıf Ekle
+          </button>
+          {classes.map((c, i) => {
+            const gradients = [
+              'linear-gradient(135deg,#6366f1,#818cf8)',
+              'linear-gradient(135deg,#06b6d4,#0284c7)',
+              'linear-gradient(135deg,#8b5cf6,#6366f1)',
+              'linear-gradient(135deg,#10b981,#06b6d4)',
+              'linear-gradient(135deg,#f59e0b,#ef4444)',
+            ];
+            const grad = gradients[i % gradients.length];
+            return (
+              <div key={c.id} onClick={() => onSelectClass(c)} className="dash-class-card p-8 group">
+                <button onClick={(e)=>{ e.stopPropagation(); onDeleteClass(c.id); }} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all text-lg hover:scale-110" style={{color:'rgba(248,113,113,0.7)'}}>🗑</button>
+                <div className="mb-4" style={{width:44,height:44,borderRadius:14,background:grad,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,boxShadow:`0 8px 20px ${grad.includes('6366f1')?'rgba(99,102,241,0.35)':'rgba(6,182,212,0.3)'}`}}>
+                  🏫
+                </div>
+                <h3 className="text-2xl font-extrabold" style={{color:'var(--text-primary)'}}>{c.name}</h3>
+                <p className="mt-2 text-xs" style={{color:'var(--text-muted)'}}>Tıklayın — sınıf detayları</p>
+                <div className="accent-bar" style={{background:grad}} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
 
@@ -661,47 +918,45 @@
       };
       
       return (
-        <div className="bg-white rounded-3xl p-10 shadow-2xl">
-          <div className="flex justify-between items-center mb-8 border-b pb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><Users className="w-6 h-6" /> Öğrenci Yönetimi</h2>
-            <button onClick={()=>setShowBulk(!showBulk)} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs flex items-center gap-2"><Plus className="w-4 h-4" /> {showBulk ? 'Tekil Ekle' : 'Toplu Ekle'}</button>
+        <div className="ap-card-glow p-8">
+          <div className="flex justify-between items-center mb-7 pb-5" style={{borderBottom:'1px solid var(--border)'}}>
+            <h2 className="text-xl font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}><Users className="w-5 h-5" style={{color:'var(--accent)'}} /> Öğrenci Yönetimi</h2>
+            <button onClick={()=>setShowBulk(!showBulk)} className="ap-btn-primary"><Plus className="w-4 h-4" /> {showBulk ? 'Tekil Ekle' : 'Toplu Ekle'}</button>
           </div>
           {showBulk ? (
-            <div className="mb-8 space-y-4">
-              <textarea value={bulkText} onChange={(e)=>setBulkText(e.target.value)} placeholder="Her satıra bir öğrenci adı yazın..." className="w-full p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500 min-h-[160px]" />
-              <button onClick={handleBulk} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold"><Save className="w-4 h-4 inline mr-2" /> Kaydet</button>
+            <div className="mb-7 space-y-3">
+              <textarea value={bulkText} onChange={(e)=>setBulkText(e.target.value)} placeholder="Her satıra bir öğrenci adı yazın..." className="ap-input min-h-[140px]" />
+              <button onClick={handleBulk} className="ap-btn-primary"><Save className="w-4 h-4" /> Kaydet</button>
             </div>
           ) : (
-            <div className="mb-8 flex gap-2">
-              <input value={name} onChange={(e)=>setName(e.target.value)} onKeyPress={(e)=>e.key==='Enter' && handleAdd()} placeholder="Öğrenci adı..." className="flex-1 p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
-              <button onClick={handleAdd} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">Ekle</button>
+            <div className="mb-7 flex gap-2">
+              <input value={name} onChange={(e)=>setName(e.target.value)} onKeyPress={(e)=>e.key==='Enter' && handleAdd()} placeholder="Öğrenci adı..." className="ap-input flex-1" />
+              <button onClick={handleAdd} className="ap-btn-primary px-6">Ekle</button>
             </div>
           )}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {students.map(s=>{
               const lvl = getLevelFromPoints(s.puan || 0);
               const progress = getProgressPercent(s.puan || 0);
               const flashing = Array.isArray(levelFlashIds) && levelFlashIds.includes(s.id);
               return (
-              <div key={s.id} className={`p-4 bg-slate-50 rounded-xl border flex flex-col gap-2 text-xs ${flashing ? 'animate-pulse bg-yellow-50' : ''}`}>
+              <div key={s.id} className={`student-card p-4 flex flex-col gap-2 text-xs ${flashing ? 'animate-pulse' : ''}`} style={flashing ? {borderColor:'rgba(251,191,36,0.4)',background:'rgba(251,191,36,0.06)'} : {}}>
                 <div className="flex items-center justify-between">
-                  <span className="truncate font-bold">{s.name}</span>
-                  <div className="flex items-center gap-2">
-                    <button onClick={()=>{ const v = parseInt(prompt('Manuel puan (örn. +5 veya -3):','5'),10); if(!isNaN(v) && v!==0) onManualAdd && onManualAdd(s.id, v); }} className="text-indigo-600 bg-white px-2 py-1 rounded-md text-[12px] font-bold">Manuel</button>
-                    <button onClick={()=>onDeleteStudent(s.id)} className="text-red-400 hover:text-red-600 ml-2" aria-label={`${s.name} sil`}>✖</button>
+                  <span className="truncate font-bold" style={{color:'var(--text-primary)'}}>{s.name}</span>
+                  <div className="flex items-center gap-1">
+                    <button onClick={()=>{ const v = parseInt(prompt('Manuel puan (örn. +5 veya -3):','5'),10); if(!isNaN(v) && v!==0) onManualAdd && onManualAdd(s.id, v); }} className="font-bold px-2 py-1 rounded-md text-[11px]" style={{background:'rgba(99,102,241,0.15)',color:'#818cf8'}}>Manuel</button>
+                    <button onClick={()=>onDeleteStudent(s.id)} className="ml-1 text-[11px] hover:text-red-400 transition-colors" style={{color:'var(--text-muted)'}} aria-label={`${s.name} sil`}>✖</button>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="level-badge"><span style={{fontSize:14}}>{avatarForLevel(lvl)}</span><span>Lv {lvl} · {labelForLevel(lvl)}</span></div>
-                  <div className="text-xs text-slate-500">{s.puan || 0} P</div>
+                  <div className="level-badge"><span style={{fontSize:13}}>{avatarForLevel(lvl)}</span><span>Lv {lvl} · {labelForLevel(lvl)}</span></div>
+                  <div className="font-bold text-xs" style={{color:'#fbbf24'}}>{s.puan || 0} P</div>
                 </div>
-                <div className="mt-2">
-                  <div className="level-progress-mini"><i style={{width:`${progress}%`}} /></div>
-                </div>
+                <div><div className="level-progress-mini"><i style={{width:`${progress}%`}} /></div></div>
               </div>
             )})}
           </div>
-          {students.length===0 && <div className="text-center py-12 text-slate-400"><Users className="w-16 h-16 mx-auto mb-4 opacity-20"/><p>Henüz öğrenci eklenmedi</p></div>}
+          {students.length===0 && <div className="text-center py-12" style={{color:'var(--text-muted)'}}><Users className="w-14 h-14 mx-auto mb-4 opacity-20"/><p>Henüz öğrenci eklenmedi</p></div>}
         </div>
       );
     };
@@ -709,55 +964,206 @@
     // ==================== HOMEWORK MANAGER ====================
     const HomeworkManager = ({ students, homeworks, onSaveHomeworks, onAddLog }) => {
       const [hwTitle, setHwTitle] = useState('');
-      const handleAddHomework = () => { 
-        const t = sanitize(hwTitle); 
-        if(t){ 
-          onSaveHomeworks([...homeworks, { id: generateId(), title:t, results:{} }]); 
-          setHwTitle(''); 
-        } 
+      const [showReport, setShowReport] = useState(false);
+      const reportRef = React.useRef(null);
+
+      const handleAddHomework = () => {
+        const t = sanitize(hwTitle);
+        if(t){ onSaveHomeworks([...homeworks, { id: generateId(), title:t, results:{} }]); setHwTitle(''); }
       };
-      
+
       const handleBulkUpdate = (hwId, status) => {
-        const hw = homeworks.find(h=>h.id===hwId); 
+        const hw = homeworks.find(h=>h.id===hwId);
         const points = status==='done'?10:status==='partial'?5:0;
-        students.forEach(s=>{ 
-          const prev = hw.results?.[s.id] || 'none'; 
-          const prevPoints = prev==='done'?10:prev==='partial'?5:0; 
-          const diff = points - prevPoints; 
-          if(diff!==0) onAddLog(s.id,'ÖDEV',diff,hw.title); 
+        students.forEach(s=>{
+          const prev = hw.results?.[s.id] || 'none';
+          const prevPoints = prev==='done'?10:prev==='partial'?5:0;
+          const diff = points - prevPoints;
+          if(diff!==0) onAddLog(s.id,'ÖDEV',diff,hw.title);
         });
-        const newResults={}; 
-        students.forEach(s=>newResults[s.id]=status); 
+        const newResults={};
+        students.forEach(s=>newResults[s.id]=status);
         onSaveHomeworks(homeworks.map(h=>h.id===hwId?{...h,results:newResults}:h));
       };
-      
-      const handleIndividualUpdate = (hwId,stdId,status) => { 
-        const hw = homeworks.find(h=>h.id===hwId); 
-        const prev = hw?.results?.[stdId]||'none'; 
-        const points = status==='done'?10:status==='partial'?5:0; 
-        const prevPoints = prev==='done'?10:prev==='partial'?5:0; 
-        const diff = points - prevPoints; 
-        if(diff!==0) onAddLog(stdId,'ÖDEV',diff,hw.title); 
-        onSaveHomeworks(homeworks.map(h=>h.id===hwId?{...h,results:{...h.results,[stdId]:status}}:h)); 
+
+      const handleIndividualUpdate = (hwId,stdId,status) => {
+        const hw = homeworks.find(h=>h.id===hwId);
+        const prev = hw?.results?.[stdId]||'none';
+        const points = status==='done'?10:status==='partial'?5:0;
+        const prevPoints = prev==='done'?10:prev==='partial'?5:0;
+        const diff = points - prevPoints;
+        if(diff!==0) onAddLog(stdId,'ÖDEV',diff,hw.title);
+        onSaveHomeworks(homeworks.map(h=>h.id===hwId?{...h,results:{...h.results,[stdId]:status}}:h));
       };
-      
+
+      // Son ödev için rapor verisi
+      const lastHw = homeworks.length > 0 ? homeworks[homeworks.length - 1] : null;
+      const yapmayanlar = lastHw ? students.filter(s => !lastHw.results?.[s.id] || lastHw.results[s.id] === 'none') : [];
+      const kismenYapanlar = lastHw ? students.filter(s => lastHw.results?.[s.id] === 'partial') : [];
+
+      const handlePrintReport = () => {
+        const today = new Date().toLocaleDateString('tr-TR');
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ödev Raporu</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <style>
+          body{font-family:Poppins,sans-serif;margin:0;padding:32px;background:#fff;color:#0f172a}
+          h1{font-size:22px;font-weight:800;margin:0 0 4px}
+          .sub{font-size:13px;color:#64748b;margin-bottom:28px}
+          .section{margin-bottom:28px}
+          .section-title{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;padding:8px 14px;border-radius:8px}
+          .red-title{background:#fef2f2;color:#dc2626;border-left:4px solid #dc2626}
+          .amber-title{background:#fffbeb;color:#d97706;border-left:4px solid #f59e0b}
+          .grid{display:flex;flex-wrap:wrap;gap:10px}
+          .badge-red{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:10px 18px;border-radius:10px;font-weight:700;font-size:14px}
+          .badge-amber{background:#fffbeb;color:#b45309;border:1px solid #fde68a;padding:10px 18px;border-radius:10px;font-weight:700;font-size:14px}
+          .footer{margin-top:32px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:14px}
+          @media print{body{padding:20px}}
+        </style></head><body>
+        <h1>📋 Ödev Durum Raporu</h1>
+        <div class="sub">Ödev: <strong>${lastHw?.title || '—'}</strong> &nbsp;|&nbsp; Tarih: ${today} &nbsp;|&nbsp; Toplam: ${students.length} öğrenci</div>
+        <div class="section">
+          <div class="section-title red-title">🚫 Ödevi Yapmayan — ${yapmayanlar.length} öğrenci</div>
+          <div class="grid">${yapmayanlar.map(s=>`<div class="badge-red">${s.name}</div>`).join('')||'<span style="color:#94a3b8;font-size:13px">Yok</span>'}</div>
+        </div>
+        <div class="section">
+          <div class="section-title amber-title">⚠️ Kısmen Yapan — ${kismenYapanlar.length} öğrenci</div>
+          <div class="grid">${kismenYapanlar.map(s=>`<div class="badge-amber">${s.name}</div>`).join('')||'<span style="color:#94a3b8;font-size:13px">Yok</span>'}</div>
+        </div>
+        <div class="footer">Asistan Pro V16 — Bu rapor veli grubuna iletmek için kullanılabilir. &nbsp; <button onclick="window.print()" style="padding:6px 14px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:Poppins,sans-serif">Yazdır / PDF</button></div>
+        </body></html>`;
+        const w = window.open('','_blank','noopener,noreferrer');
+        if(!w){alert('Pop-up engellendi. İzin verin.');return;}
+        w.document.open(); w.document.write(html); w.document.close(); w.focus();
+      };
+
       return (
-        <div className="bg-white rounded-3xl p-10 shadow-2xl overflow-x-auto">
-          <div className="flex justify-between items-center mb-8 border-b pb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" /> Ödev Yönetimi</h2>
-            <div className="flex gap-2">
-              <input value={hwTitle} onChange={(e)=>setHwTitle(e.target.value)} placeholder="Ödev konusu..." className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
-              <button onClick={handleAddHomework} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"><Plus className="w-4 h-4" /></button>
+        <div className="ap-card-glow p-7 overflow-x-auto">
+          <div className="flex flex-wrap justify-between items-center mb-7 pb-5 gap-3" style={{borderBottom:'1px solid var(--border)'}}>
+            <h2 className="text-xl font-bold flex items-center gap-2" style={{color:'var(--text-primary)'}}><FileText className="w-5 h-5" style={{color:'var(--accent)'}} /> Ödev Yönetimi</h2>
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* ---- RAPOR BUTONU ---- */}
+              {homeworks.length > 0 && (
+                <button onClick={()=>setShowReport(r=>!r)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all"
+                  style={{background: showReport ? 'rgba(239,68,68,0.18)' : 'rgba(239,68,68,0.12)', color:'#f87171', border:'1px solid rgba(239,68,68,0.25)'}}>
+                  📋 {showReport ? 'Tabloyu Göster' : 'Yapmayanlar Raporu'}
+                </button>
+              )}
+              <input value={hwTitle} onChange={(e)=>setHwTitle(e.target.value)} placeholder="Ödev konusu..." className="ap-input" style={{width:200}} />
+              <button onClick={handleAddHomework} className="ap-btn-primary"><Plus className="w-4 h-4" /></button>
             </div>
           </div>
-          {homeworks.length > 0 ? (
-            <table className="w-full">
-              <thead><tr><th className="text-left pb-4 font-bold text-xs text-slate-400">ÖĞRENCİ</th>
-                {homeworks.map(h=>(<th key={h.id} className="px-2"><div className="flex flex-col items-center gap-1 mb-4"><span className="text-[10px] font-bold text-indigo-600 mb-2">{h.title}</span><div className="flex gap-1"><button onClick={()=>handleBulkUpdate(h.id,'done')} className="text-[8px] bg-green-100 text-green-600 px-2 py-1 rounded font-bold">TAM</button><button onClick={()=>handleBulkUpdate(h.id,'partial')} className="text-[8px] bg-yellow-100 text-yellow-600 px-2 py-1 rounded font-bold">AZ</button><button onClick={()=>handleBulkUpdate(h.id,'none')} className="text-[8px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold">YOK</button></div></div></th>))}
-              </tr></thead>
-              <tbody>{students.map(s=>(<tr key={s.id} className="border-t hover:bg-slate-50"><td className="py-3 text-xs font-bold">{s.name}</td>{homeworks.map(h=>(<td key={h.id} className="text-center"><div className="flex gap-1 justify-center">{['done','partial','none'].map(st=>(<button key={st} onClick={()=>handleIndividualUpdate(h.id,s.id,st)} className={`px-2 py-1 rounded-lg text-[8px] font-bold transition-all ${h.results?.[s.id]===st ? (st==='done'?'bg-green-500 text-white':st==='partial'?'bg-yellow-500 text-white':'bg-red-500 text-white') : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{st==='done'?'TAM':st==='partial'?'AZ':'YOK'}</button>))}</div></td>))}</tr>))}</tbody>
-            </table>
-          ) : (<div className="text-center py-12 text-slate-400"><FileText className="w-16 h-16 mx-auto mb-4 opacity-20" /><p>Henüz ödev eklenmedi</p></div>)}
+
+          {/* ======= YAPMAYANLAR RAPORU PANELİ ======= */}
+          {showReport && lastHw && (
+            <div className="hw-report-panel mb-7 rounded-2xl overflow-hidden" style={{border:'1px solid rgba(129,140,248,0.15)'}}>
+              <div className="px-5 py-3 flex items-center justify-between" style={{background:'rgba(15,17,23,0.7)',borderBottom:'1px solid rgba(129,140,248,0.1)'}}>
+                <div>
+                  <span className="font-bold text-sm" style={{color:'var(--text-primary)'}}>Son Ödev: </span>
+                  <span className="font-bold text-sm" style={{color:'#818cf8'}}>{lastHw.title}</span>
+                  <span className="ml-3 text-xs" style={{color:'var(--text-muted)'}}>{students.length} öğrenci</span>
+                </div>
+                <button onClick={handlePrintReport}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm"
+                  style={{background:'linear-gradient(135deg,#6366f1,#4f46e5)',color:'#fff',boxShadow:'0 4px 14px rgba(99,102,241,0.3)'}}>
+                  🖨️ Raporu Aç / Yazdır
+                </button>
+              </div>
+
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Yapmayanlar */}
+                <div className="rounded-xl p-4" style={{background:'rgba(239,68,68,0.07)',border:'1px solid rgba(239,68,68,0.2)'}}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">🚫</span>
+                    <span className="font-extrabold text-sm" style={{color:'#f87171'}}>Ödevi Yapmayan</span>
+                    <span className="ml-auto font-extrabold text-lg" style={{color:'#ef4444'}}>{yapmayanlar.length}</span>
+                  </div>
+                  {yapmayanlar.length === 0
+                    ? <p className="text-xs text-center py-3" style={{color:'var(--text-muted)'}}>Hepsi yaptı 🎉</p>
+                    : <div className="flex flex-wrap gap-2">
+                        {yapmayanlar.map(s => (
+                          <span key={s.id} className="px-3 py-2 rounded-lg text-sm font-bold"
+                            style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5',border:'1px solid rgba(239,68,68,0.3)'}}>
+                            {s.name}
+                          </span>
+                        ))}
+                      </div>
+                  }
+                </div>
+
+                {/* Kısmen yapanlar */}
+                <div className="rounded-xl p-4" style={{background:'rgba(245,158,11,0.07)',border:'1px solid rgba(245,158,11,0.2)'}}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">⚠️</span>
+                    <span className="font-extrabold text-sm" style={{color:'#fbbf24'}}>Kısmen Yapan</span>
+                    <span className="ml-auto font-extrabold text-lg" style={{color:'#f59e0b'}}>{kismenYapanlar.length}</span>
+                  </div>
+                  {kismenYapanlar.length === 0
+                    ? <p className="text-xs text-center py-3" style={{color:'var(--text-muted)'}}>Kısmen yapan yok</p>
+                    : <div className="flex flex-wrap gap-2">
+                        {kismenYapanlar.map(s => (
+                          <span key={s.id} className="px-3 py-2 rounded-lg text-sm font-bold"
+                            style={{background:'rgba(245,158,11,0.13)',color:'#fde68a',border:'1px solid rgba(245,158,11,0.28)'}}>
+                            {s.name}
+                          </span>
+                        ))}
+                      </div>
+                  }
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======= NORMAL TABLO ======= */}
+          {!showReport && (
+            homeworks.length > 0 ? (
+              <table className="w-full ap-table">
+                <thead><tr>
+                  <th className="text-left pb-4">ÖĞRENCİ</th>
+                  {homeworks.map(h=>(
+                    <th key={h.id} className="px-2">
+                      <div className="flex flex-col items-center gap-1 mb-4">
+                        <span className="text-[10px] font-bold mb-1" style={{color:'#818cf8'}}>{h.title}</span>
+                        <div className="flex gap-1">
+                          <button onClick={()=>handleBulkUpdate(h.id,'done')} className="text-[8px] px-2 py-1 rounded font-bold" style={{background:'rgba(16,185,129,0.15)',color:'#6ee7b7'}}>TAM</button>
+                          <button onClick={()=>handleBulkUpdate(h.id,'partial')} className="text-[8px] px-2 py-1 rounded font-bold" style={{background:'rgba(245,158,11,0.15)',color:'#fde68a'}}>AZ</button>
+                          <button onClick={()=>handleBulkUpdate(h.id,'none')} className="text-[8px] px-2 py-1 rounded font-bold" style={{background:'rgba(239,68,68,0.15)',color:'#fca5a5'}}>YOK</button>
+                        </div>
+                      </div>
+                    </th>
+                  ))}
+                </tr></thead>
+                <tbody>
+                  {students.map(s=>(
+                    <tr key={s.id} style={{borderTop:'1px solid var(--border)'}}>
+                      <td className="py-3 text-xs font-bold" style={{color:'var(--text-primary)'}}>{s.name}</td>
+                      {homeworks.map(h=>(
+                        <td key={h.id} className="text-center">
+                          <div className="flex gap-1 justify-center">
+                            {['done','partial','none'].map(st=>(
+                              <button key={st} onClick={()=>handleIndividualUpdate(h.id,s.id,st)}
+                                className={`px-2 py-1 rounded-lg text-[8px] font-bold transition-all`}
+                                style={h.results?.[s.id]===st
+                                  ? (st==='done'
+                                    ? {background:'rgba(16,185,129,0.3)',color:'#6ee7b7',border:'1px solid rgba(16,185,129,0.4)'}
+                                    : st==='partial'
+                                    ? {background:'rgba(245,158,11,0.3)',color:'#fde68a',border:'1px solid rgba(245,158,11,0.4)'}
+                                    : {background:'rgba(239,68,68,0.3)',color:'#fca5a5',border:'1px solid rgba(239,68,68,0.4)'})
+                                  : {background:'rgba(255,255,255,0.05)',color:'var(--text-muted)',border:'1px solid transparent'}}>
+                                {st==='done'?'TAM':st==='partial'?'AZ':'YOK'}
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="text-center py-14" style={{color:'var(--text-muted)'}}><FileText className="w-14 h-14 mx-auto mb-4 opacity-20" /><p>Henüz ödev eklenmedi</p></div>
+            )
+          )}
         </div>
       );
     };
@@ -1941,18 +2347,20 @@ const ranking = [...students]
       return (
         <ErrorBoundary>
           <div className="min-h-screen">
-            <nav className="bg-gradient-to-r from-slate-900 to-indigo-900 text-white p-4 flex justify-between items-center border-b-4 border-indigo-600">
+            <nav className="ap-nav px-6 py-3 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <h1 onClick={()=>{ setPage('dashboard'); setSelClass(null); }} className="text-xl font-bold cursor-pointer flex items-center gap-2">Asistan <span style={{color:'#a78bfa'}}>Pro V16</span></h1>
-                <div className="hidden md:flex items-center gap-3 text-sm text-slate-200">
-                  <span className="opacity-80">Sınıf: </span>
-                  {selClass ? <span className="bg-indigo-600 px-3 py-1 rounded text-xs font-bold">{selClass.name}</span> : <span className="text-slate-400">Henüz seçili değil</span>}
+                <div onClick={()=>{ setPage('dashboard'); setSelClass(null); }} className="ap-nav-logo flex items-center gap-2">
+                  Asistan <span className="v">Pro V16</span>
                 </div>
+                {selClass && (
+                  <span className="ap-class-chip hidden md:inline-flex items-center gap-1">
+                    <span style={{fontSize:10,opacity:0.7}}>SINIF</span> {selClass.name}
+                  </span>
+                )}
               </div>
-
               <div className="nav-action">
-                <button onClick={handleBackup} title="Yedekle" className="bg-indigo-500 hover:bg-indigo-400 small-btn text-white flex items-center gap-2"><Download className="w-4 h-4" /> Yedekle</button>
-                <button onClick={handleRestoreClick} title="Yedekten Yükle" className="bg-white/10 hover:bg-white/20 small-btn text-white flex items-center gap-2"><Upload className="w-4 h-4" /> Yükle</button>
+                <button onClick={handleBackup} className="ap-btn-primary"><Download className="w-4 h-4" /> Yedekle</button>
+                <button onClick={handleRestoreClick} className="ap-btn-ghost"><Upload className="w-4 h-4" /> Yükle</button>
                 <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
               </div>
             </nav>
@@ -1962,15 +2370,15 @@ const ranking = [...students]
 
               {selClass && (
                 <>
-                  <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl w-fit shadow-sm border mx-auto md:mx-0 mb-6">
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='list' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('list')}>Öğrenci</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='hw' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('hw')}>Ödev</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='wheel' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('wheel')}>Kura</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='exam' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('exam')}>Sınav</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='stats' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('stats')}>Analiz</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='rank' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('rank')}>Liderlik</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='daily' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('daily')}>Günün Sorusu</button>
-                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='tools' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('tools')}>Araçlar</button>
+                  <div className="ap-tabs mb-6">
+                    <button className={`ap-tab ${page==='list'?'active':''}`} onClick={()=>setPage('list')}>👥 Öğrenci</button>
+                    <button className={`ap-tab ${page==='hw'?'active':''}`} onClick={()=>setPage('hw')}>📚 Ödev</button>
+                    <button className={`ap-tab ${page==='wheel'?'active':''}`} onClick={()=>setPage('wheel')}>🎯 Kura</button>
+                    <button className={`ap-tab ${page==='exam'?'active':''}`} onClick={()=>setPage('exam')}>📝 Sınav</button>
+                    <button className={`ap-tab ${page==='stats'?'active':''}`} onClick={()=>setPage('stats')}>📊 Analiz</button>
+                    <button className={`ap-tab ${page==='rank'?'active':''}`} onClick={()=>setPage('rank')}>🏆 Liderlik</button>
+                    <button className={`ap-tab ${page==='daily'?'active':''}`} onClick={()=>setPage('daily')}>💡 Günün Sorusu</button>
+                    <button className={`ap-tab ${page==='tools'?'active':''}`} onClick={()=>setPage('tools')}>🔧 Araçlar</button>
                   </div>
 
                   {page==='list' && <StudentList students={students} onAddStudent={handleAddStudent} onAddBulk={handleAddBulkStudents} onDeleteStudent={handleDeleteStudent} levelFlashIds={levelFlashIds} onManualAdd={manualAddForStudent} />}
@@ -2022,19 +2430,18 @@ onAddLog={addLog} onRemoveStudent={handleRemoveStudent} />}
                   {page==='daily' && <DailyQuestions students={students} addLog={addLog} />}
 
                   {page==='tools' && (
-                    <div className="max-w-3xl mx-auto space-y-6">
-                      <div className="text-center text-slate-700 font-bold mb-2">Sınıf Ses Ölçer (Sessizlik Puanları)</div>
+                    <div className="max-w-3xl mx-auto space-y-5">
+                      <div className="text-center font-bold mb-2" style={{color:'var(--text-secondary)'}}>Sınıf Ses Ölçer (Sessizlik Puanları)</div>
                       <SoundMeter threshold={0.08} initialGain={1.0} onAboveThreshold={(lvl)=>{ }} onBelowThreshold={(lvl)=>{ }} onClassSilenceIncrement={(amt) => { incrementClassSilencePoints(amt); }} />
-                      <div className="text-sm text-slate-500 mt-2">Sessizlik Puanları sınıf bazında toplanır; hedefe ulaştığında rozetler sınıfa verilir.</div>
-
-                      <div className="bg-white p-4 rounded-2xl shadow">
-                        <h4 className="text-sm font-bold text-indigo-600">Puan Yönetimi (Sınıf / Bireysel)</h4>
-                        <div className="mt-3 text-sm text-slate-600">Buradan tüm sınıfın puanlarını sıfırlayabilir veya önceden alınmış sınıf yedeğini geri yükleyebilirsiniz. Ayrıca sınıf içindeki bireysel yedeklerin de yönetimi StudentDetail içinden yapılır.</div>
+                      <div className="text-sm mt-2" style={{color:'var(--text-muted)'}}>Sessizlik Puanları sınıf bazında toplanır; hedefe ulaştığında rozetler sınıfa verilir.</div>
+                      <div className="ap-card p-5">
+                        <h4 className="text-sm font-bold mb-1" style={{color:'#818cf8'}}>Puan Yönetimi (Sınıf / Bireysel)</h4>
+                        <div className="mt-2 text-sm" style={{color:'var(--text-secondary)'}}>Buradan tüm sınıfın puanlarını sıfırlayabilir veya önceden alınmış sınıf yedeğini geri yükleyebilirsiniz.</div>
                         <div className="mt-4 flex gap-3">
-                          <button onClick={resetClassPoints} className="px-4 py-2 bg-rose-500 text-white rounded-md font-bold">Sınıfı Sıfırla (Yedekle)</button>
-                          <button onClick={restoreClassPoints} className="px-4 py-2 bg-indigo-600 text-white rounded-md font-bold">Sınıfı Geri Yükle</button>
+                          <button onClick={resetClassPoints} className="px-4 py-2 rounded-xl font-bold text-sm" style={{background:'rgba(239,68,68,0.18)',color:'#f87171',border:'1px solid rgba(239,68,68,0.3)'}}>Sınıfı Sıfırla (Yedekle)</button>
+                          <button onClick={restoreClassPoints} className="ap-btn-primary">Sınıfı Geri Yükle</button>
                         </div>
-                        <div className="mt-3 text-xs text-slate-400">Not: Sıfırlama işleminden önce mevcut öğrenci verileri localStorage'a yedeklenir.</div>
+                        <div className="mt-3 text-xs" style={{color:'var(--text-muted)'}}>Not: Sıfırlama işleminden önce mevcut öğrenci verileri localStorage'a yedeklenir.</div>
                       </div>
                     </div>
                   )}
