@@ -1,355 +1,2073 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistan V13 - Profesyonel</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asistan Pro V16</title>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        /* Senin tasarımındaki özel scrollbar ve geçişler */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root { --main-font: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; --accent: #6366f1; }
+    body { font-family: var(--main-font); background: #f8fafc; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+    .scroller-wrap { width: 760px; max-width: 96vw; text-align:center; }
+    .scroller-window { height: 140px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:14px; background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(249,250,251,0.98)); box-shadow: 0 10px 30px rgba(2,6,23,0.08); border: 1px solid rgba(15,23,42,0.04); position:relative; }
+    .name-wrapper { width: 100%; display:flex; align-items:center; justify-content:center; }
+    .name-item { display:block; width: 88%; text-align: center; font-weight:800; font-size:32px; color:#0f172a; padding:10px 22px; border-radius:12px; transition: all 220ms ease; user-select:none; transform-origin:center; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+    .name-item.dim { opacity:0.28; transform: scale(0.96); filter: blur(0.3px); }
+    .name-item.active { transform: scale(1.18); color: #fff; padding: 14px 26px; border-radius: 12px; text-shadow: 0 8px 18px rgba(0,0,0,0.18); }
+
+    .chart-container { height: 220px; }
+    .nav-action { display:inline-flex; gap:8px; align-items:center; }
+    .small-btn { padding:6px 10px; border-radius:8px; font-weight:700; font-size:13px; }
+    .class-card { transition: transform .18s ease, box-shadow .18s ease; }
+    .class-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 16px 40px rgba(2,6,23,0.12); }
+
+    .timer-card { width: 520px; max-width: 92vw; background: linear-gradient(180deg,#ffffff, #fbfdff); border-radius: 18px; padding: 22px; box-shadow: 0 20px 40px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.6); border: 1px solid rgba(15,23,42,0.04); }
+    .timer-center { width: 320px; height: 320px; display:flex; align-items:center; justify-content:center; margin: 0 auto; position: relative; }
+    .timer-value { position:absolute; text-align:center; }
+    .timer-value .big { font-size:58px; font-weight:800; letter-spacing: -2px; }
+    .timer-value .small { font-size:14px; color:#64748b; margin-top:6px; }
+
+    .quick-finger { background: #fff; padding: 12px; border-radius: 14px; box-shadow: 0 8px 24px rgba(2,6,23,0.06); display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .student-chip { padding:8px 12px; border-radius:12px; font-weight:700; display:inline-flex; gap:8px; align-items:center; }
+    .student-chip .name { font-size:13px; }
+    .student-chip .award { font-size:12px; padding:6px 8px; border-radius:8px; cursor:pointer; }
+
+    .level-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 8px; border-radius:999px; font-weight:800; font-size:12px; background: linear-gradient(90deg,#eef2ff,#fff); color:#334155; border:1px solid rgba(99,102,241,0.08); }
+    .level-progress-mini { height:8px; width:140px; background:#eef2ff; border-radius:999px; overflow:hidden; }
+    .level-progress-mini > i { display:block; height:100%; background:linear-gradient(90deg,#06b6d4,#6366f1); }
+
+    /* V15: LEADERBOARD SCROLLER */
+    .leaderboard-scroller { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background: linear-gradient(90deg, #1e293b 0%, #4f46e5 50%, #1e293b 100%); color: white; display: flex; align-items: center; overflow: hidden; z-index: 998; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+    .leaderboard-scroller-content { display: flex; gap: 30px; padding: 0 20px; white-space: nowrap; animation: scrollLB 60s linear infinite; }
+    @keyframes scrollLB { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    .leaderboard-item { display: inline-flex; gap: 12px; align-items: center; flex-shrink: 0; padding: 10px 18px; background: rgba(255,255,255,0.1); border-radius: 20px; backdrop-filter: blur(10px); font-weight: 700; }
+    .leaderboard-rank { font-weight: 900; font-size: 18px; min-width: 32px; }
+    .leaderboard-name { min-width: 130px; }
+    .leaderboard-points { color: #fbbf24; font-weight: 800; }
+
+    @media (max-width:900px) {
+      .scroller-wrap { width: 92vw; }
+      .scroller-window { height: 100px; }
+      .name-item { font-size: 20px; }
+      .name-item.active { transform: scale(1.12); }
+      .timer-card { padding: 14px; }
+      .timer-center { width: 260px; height: 260px; }
+      .timer-value .big { font-size:42px; }
+    }
+
+    @media print { body { -webkit-print-color-adjust: exact; } }
+
+    .toast-notice { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(90deg,#06b6d4,#6366f1); color: white; padding: 10px 14px; border-radius: 10px; font-weight:800; box-shadow:0 12px 34px rgba(2,6,23,0.12); }
+
+    .exam-overlay { position: fixed; left: 50%; top: 12px; transform: translateX(-50%); z-index: 9999; background: linear-gradient(90deg,#06b6d4,#6366f1); color: white; padding: 18px 28px; border-radius: 14px; box-shadow: 0 20px 60px rgba(6,78,120,0.18); text-align: center; min-width: 420px; max-width: 96vw; }
+    .exam-overlay .label { font-weight:800; font-size:18px; }
+    .exam-overlay .time { font-weight:900; font-size:48px; margin-top:6px; }
+    .exam-overlay .controls { margin-top:10px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+
+    .timer-badge-global { display:none; }
+  </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="antialiased">
+  <div id="root" class="min-h-screen pb-20"></div>
 
-    <script type="text/babel">
-        // Lucide ikonlarını kodun içinde kullanabilmen için gerekli tanımlama
-        const { 
-            AlertCircle, Users, BookOpen, Trophy, BarChart3, 
-            FileText, Sparkles, Plus, X, Save, Trash2, 
-            ChevronRight, ChevronLeft, Download, Upload,
-            History, Info, Settings, Layout, CheckCircle2
-        } = lucide;
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
 
-        // --- SENİN VERDİĞİN V13 KODUNUN BAŞLANGICI ---
-        
-        const sanitize = (input) => {
-          if (!input) return '';
-          return String(input).replace(/[<>]/g, '').trim().slice(0, 100);
-        };
+    // ==================== ICONS ====================
+    const Icon = ({ children, className='', viewBox='0 0 24 24' }) =>
+      <svg viewBox={viewBox} className={className} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><g>{children}</g></svg>;
+    const Users = (p) => <Icon {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H11a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></Icon>;
+    const FileText = (p) => <Icon {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></Icon>;
+    const Sparkles = (p) => <Icon {...p}><path d="M12 2l1.5 3 3 1.5-3 1.5L12 11l-1.5-3L7 6.5 10 5z"/><path d="M5 14l.9 1.9L8 17l-1.1 1.1L6 20l-.9-1.9L4 17l1.1-1.1z"/></Icon>;
+    const Plus = (p) => <Icon {...p}><path d="M12 5v14M5 12h14"/></Icon>;
+    const Save = (p) => <Icon {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></Icon>;
+    const Download = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
+    const Upload = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="21"/></Icon>;
+    const Trophy = (p) => <Icon {...p}><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v4a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V4z"/></Icon>;
 
-        const storage = {
-          set: (key, value) => {
-            try {
-              const serialized = JSON.stringify(value);
-              if (serialized.length > 4 * 1024 * 1024) {
-                alert('Veri çok büyük (max 4MB)');
-                return { success: false };
-              }
-              localStorage.setItem(key, serialized);
-              return { success: true };
-            } catch (e) {
-              console.error('Storage hatası:', e);
-              return { success: false, error: e.message };
-            }
-          },
-          get: (key, defaultValue = null) => {
-            try {
-              const item = localStorage.getItem(key);
-              return item ? JSON.parse(item) : defaultValue;
-            } catch { return defaultValue; }
-          },
-          remove: (key) => localStorage.removeItem(key)
-        };
+    // ==================== HELPERS & STORAGE ====================
+    const sanitize = (input) => { if (input == null) return ''; return String(input).replace(/[<>]/g,'').trim().slice(0,200); };
+    const storage = {
+      set: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ console.error(e); return false; } },
+      get: (k,d=null) => { try { const it = localStorage.getItem(k); return it ? JSON.parse(it) : d; } catch { return d; } },
+      remove: (k) => { try { localStorage.removeItem(k); return true; } catch { return false; } }
+    };
+    const generateId = () => `${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
 
-        const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // ==================== V16: LEVEL SYSTEM (Her 25 Puan, 10 Kademeli Seviye) ====================
+    const LEVEL_TIERS = [
+      { minLv:1,  maxLv:1,  emoji:'🥚', label:'Yumurta'  },
+      { minLv:2,  maxLv:2,  emoji:'🐣', label:'Civciv'   },
+      { minLv:3,  maxLv:3,  emoji:'🐥', label:'Piliç'    },
+      { minLv:4,  maxLv:4,  emoji:'🐔', label:'Tavuk'    },
+      { minLv:5,  maxLv:5,  emoji:'🦅', label:'Kartal'   },
+      { minLv:6,  maxLv:6,  emoji:'🦁', label:'Aslan'    },
+      { minLv:7,  maxLv:7,  emoji:'🐺', label:'Kurt'     },
+      { minLv:8,  maxLv:8,  emoji:'🛡️',label:'Savaşçı' },
+      { minLv:9,  maxLv:9,  emoji:'🧙', label:'Büyücü'   },
+      { minLv:10, maxLv:999,emoji:'🐉', label:'Ejderha'  },
+    ];
+    function getLevelFromPoints(points = 0) {
+      const p = Math.max(0, Number(points || 0));
+      return Math.floor(p / 25) + 1;
+    }
+    function getNextThreshold(points = 0) {
+      const lvl = getLevelFromPoints(points);
+      return lvl * 25;
+    }
+    function getProgressPercent(points = 0) {
+      const p = Math.max(0, Number(points || 0));
+      return Math.round((p % 25) / 25 * 100);
+    }
+    function avatarForLevel(level) {
+      const lv = Math.max(1, Number(level) || 1);
+      const tier = LEVEL_TIERS.find(t => lv >= t.minLv && lv <= t.maxLv) || LEVEL_TIERS[LEVEL_TIERS.length-1];
+      return tier.emoji;
+    }
+    function labelForLevel(level) {
+      const lv = Math.max(1, Number(level) || 1);
+      const tier = LEVEL_TIERS.find(t => lv >= t.minLv && lv <= t.maxLv) || LEVEL_TIERS[LEVEL_TIERS.length-1];
+      return tier.label;
+    }
 
-        // Hata Sınırı Bileşeni
-        class ErrorBoundary extends React.Component {
-          constructor(props) {
-            super(props);
-            this.state = { hasError: false };
-          }
-          static getDerivedStateFromError() { return { hasError: true }; }
-          render() {
-            if (this.state.hasError) {
+    // ==================== AUDIO ====================
+    let sharedAudioCtx = null;
+    function getAudioCtx() { if (sharedAudioCtx) return sharedAudioCtx; try { sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); return sharedAudioCtx; } catch { return null; } }
+    function ensureAudioResume() { const ctx = getAudioCtx(); if (!ctx) return; if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(()=>{}); }
+    function playToneSequence(tones = []) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+        let t0 = ctx.currentTime;
+        tones.forEach(({freq, dur, type, vol, delay=0}) => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = type || 'sine';
+          o.frequency.setValueAtTime(freq, t0 + delay);
+          g.gain.setValueAtTime(vol || 0.06, t0 + delay);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + delay + dur);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t0 + delay);
+          o.stop(t0 + delay + dur + 0.02);
+        });
+      } catch (e) { }
+    }
+    const playTickSound = () => playToneSequence([{ freq: 420 + Math.random()*160, dur: 0.05, type: 'sine', vol: 0.03 }]);
+    const playSpinStart = () => { ensureAudioResume(); playToneSequence([{ freq: 260, dur: 0.14, type:'triangle', vol:0.04 }]); };
+    const playFinalSound = () => playToneSequence([{ freq: 980, dur:0.12, type:'triangle', vol:0.10 }, { freq: 720, dur:0.08, type:'triangle', vol:0.07, delay: 0.09 }]);
+    const playPointSound = (amount) => { ensureAudioResume(); if (amount > 0) { playToneSequence([{ freq: 1200, dur: 0.10, type: 'triangle', vol: 0.10 }, { freq: 880, dur: 0.08, type: 'triangle', vol: 0.07, delay: 0.09 }]); } else if (amount < 0) { playToneSequence([{ freq: 140, dur: 0.18, type: 'sawtooth', vol: 0.08 }, { freq: 110, dur: 0.12, type: 'sawtooth', vol: 0.06, delay: 0.06 }]); } else { playToneSequence([{ freq: 520, dur: 0.06, type: 'sine', vol: 0.04 }]); } };
+    const playLevelUpSound = () => { ensureAudioResume(); playToneSequence([{ freq: 880, dur: 0.18, type:'triangle', vol:0.10 }, { freq: 1200, dur: 0.12, type:'triangle', vol:0.08, delay:0.12 }]); };
+
+    // ==================== PERSISTENT HOOK ====================
+    const useLocalStorageState = (key, defaultValue) => {
+      const [state, setState] = useState(() => {
+        const v = storage.get(key, defaultValue);
+        return v === null || v === undefined ? defaultValue : v;
+      });
+      useEffect(() => { storage.set(key, state); }, [key, state]);
+      return [state, setState];
+    };
+
+    // ==================== V15: AUTO-BACKUP (30 Dakika) ====================
+    function useAutoBackup(classes) {
+      useEffect(() => {
+        const interval = setInterval(() => {
+          if (!classes || classes.length === 0) return;
+          const data = { version: 16, created: new Date().toISOString(), classes, payload: {} };
+          classes.forEach(c => {
+            const students = storage.get(`s13_${c.id}`, []);
+            const homeworks = storage.get(`h13_${c.id}`, []);
+            const exams = storage.get(`e13_${c.id}`, []);
+            const wheelData = storage.get(`wheel_${c.id}`, {});
+            data.payload[c.id] = { students, homeworks, exams, wheelData };
+          });
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `AsistanV16_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        }, 30 * 60 * 1000);
+        return () => clearInterval(interval);
+      }, [classes]);
+    }
+
+    // ==================== ERROR BOUNDARY ====================
+    function ErrorBoundary({children}) {
+      const [hasError, setHasError] = useState(false);
+      useEffect(() => {
+        const h = (e) => { console.error(e); setHasError(true); };
+        window.addEventListener('error', h);
+        window.addEventListener('unhandledrejection', h);
+        return () => { window.removeEventListener('error', h); window.removeEventListener('unhandledrejection', h); };
+      }, []);
+      if (hasError) return <div className="min-h-screen flex items-center justify-center p-6"><div className="bg-white p-8 rounded-2xl shadow"><h2 className="text-xl font-bold">Bir Hata Oluştu</h2><p className="mt-3">Sayfayı yenileyin.</p><button className="mt-4 px-4 py-2 rounded bg-indigo-600 text-white" onClick={()=>window.location.reload()}>Yenile</button></div></div>;
+      return children;
+    }
+
+    // ==================== BADGES (unchanged) ====================
+    const BADGES = [
+      { id: "streak_homework_3", name: "Çalışkan Başlangıç", icon: "📘", description: "3 ödev üst üste TAM yapan öğrenciye verilir.", trigger: "homework_streak", conditions: { type: "consecutive_homework", count: 3 }, points: 5 },
+      { id: "streak_homework_7", name: "Ödev Ustası", icon: "📗", description: "7 ödev üst üste TAM yapan öğrenciye verilir.", trigger: "homework_streak", conditions: { type: "consecutive_homework", count: 7 }, points: 15 },
+      { id: "exam_improve_20", name: "Atılımcı", icon: "🚀", description: "Bir denemede önceki denemeye göre en az %20 artış gösteren öğrenciye verilir.", trigger: "exam_improvement", conditions: { type: "relative_improvement_percent", percent: 20 }, points: 20 },
+      { id: "wheel_selected_5", name: "Şanslı Yüz", icon: "🎯", description: "Kura çarkında 5 kez seçilen öğrenciye verilir.", trigger: "wheel_selection", conditions: { type: "wheel_selected_count", count: 5 }, points: 8 },
+      { id: "perfect_exam", name: "Kusursuz", icon: "🏅", description: "Bir denemede maksimum nete yakın (%95 ve üzeri) sonuç elde eden öğrenciye verilir.", trigger: "exam_score", conditions: { type: "percent_of_total", percent: 95 }, points: 30 },
+      { id: "silence_master", name: "Sessizlik Şampiyonu", icon: "🤫", description: "Sınıf sessizliğinde hedeflenen puanlara ulaşılınca tüm sınıfa verilebilir.", trigger: "silence_points", conditions: { type: "silence_points", points: 50 }, points: 10 },
+      { id: "social_helper", name: "Takım Oyuncusu", icon: "🤝", description: "Sınıf içi yardımlaşma için.", trigger: "manual_or_behavior", conditions: { type: "manual_award", min_awards: 3 }, points: 12 },
+      { id: "leader_board_top3", name: "Liderlik Rozeti", icon: "👑", description: "Ay sonunda liderlik tablosunda ilk 3'e giren öğrenciye verilir.", trigger: "monthly_rank", conditions: { type: "top_n", n: 3 }, points: 25 },
+      { id: "consistency_10weeks", name: "İstikrar", icon: "🧭", description: "10 hafta boyunca sınıf ortalamasının üzerinde kalan öğrenciye verilir.", trigger: "long_term_consistency", conditions: { type: "weeks_above_class_avg", weeks: 10 }, points: 40 }
+    ];
+
+    // === BADGES PANEL (unchanged) ===
+    function BadgesPanel({ badges = [], studentBadges = [], onInspect = () => {} }) {
+      const earnedSet = new Set((studentBadges || []).map(b => (typeof b === 'string' ? b : b.id)));
+      return (
+        <div className="bg-white p-4 rounded-2xl shadow space-y-3">
+          <h4 className="text-sm font-bold text-indigo-600">Rozetler & Unvanlar</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {badges.map(b => {
+              const earned = earnedSet.has(b.id);
               return (
-                <div className="p-8 text-center">
-                  <h2 className="text-2xl font-bold text-red-600">Bir hata oluştu.</h2>
-                  <button onClick={() => window.location.reload()} className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-xl">Sayfayı Yenile</button>
+                <div key={b.id} className={`p-3 rounded-xl border ${earned ? 'bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-lg' : 'bg-slate-50'}`} title={b.description}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 flex items-center justify-center text-2xl">{b.icon || '🏅'}</div>
+                    <div>
+                      <div className="font-bold text-sm">{b.name}</div>
+                      <div className="text-[11px] opacity-70">{earned ? 'Sahip' : 'Kilitli'}</div>
+                    </div>
+                  </div>
+                  {!earned && (
+                    <div className="mt-3">
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div className="h-2 bg-indigo-500" style={{ width: (b._progress||0) + '%' }} />
+                      </div>
+                      <div className="text-[11px] opacity-60 mt-1">{b.description}</div>
+                    </div>
+                  )}
+                  <div className="mt-3 text-right">
+                    <button onClick={() => onInspect(b)} className={`px-3 py-1 rounded-md text-xs font-bold ${earned ? 'bg-white/20 text-white' : 'bg-indigo-600 text-white'}`}>{earned ? 'Göster' : 'Nasıl kazanılır?'}</button>
+                  </div>
                 </div>
               );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // PART1 DEVAM EDECEK - PART2'YE GEÇ
+     // ==================== SOUND METER (V15: Optional) ====================
+    function SoundMeter({ threshold = 0.08, onAboveThreshold = () => {}, onBelowThreshold = () => {}, initialGain = 1.0, onClassSilenceIncrement = () => {} }) {
+      const [permission, setPermission] = useState('idle');
+      const [level, setLevel] = useState(0);
+      const [gain, setGain] = useState(initialGain);
+      const [silencePoints, setSilencePoints] = useState(0);
+      const [enabled, setEnabled] = useState(false);
+      const audioCtxRef = useRef(null);
+      const analyserRef = useRef(null);
+      const sourceRef = useRef(null);
+      const gainNodeRef = useRef(null);
+      const rafRef = useRef(null);
+
+      useEffect(() => {
+        if (!enabled) return;
+        let mounted = true;
+        async function start() {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            if (!mounted) return;
+            setPermission('granted');
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContext();
+            audioCtxRef.current = ctx;
+            const src = ctx.createMediaStreamSource(stream);
+            sourceRef.current = src;
+            const gainNode = ctx.createGain();
+            gainNode.gain.value = gain;
+            gainNodeRef.current = gainNode;
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 2048;
+            analyserRef.current = analyser;
+            src.connect(gainNode);
+            gainNode.connect(analyser);
+            const data = new Float32Array(analyser.fftSize);
+            let belowSince = 0;
+            function tick() {
+              analyser.getFloatTimeDomainData(data);
+              let sum = 0;
+              for (let i=0;i<data.length;i++){ sum += data[i]*data[i]; }
+              const rms = Math.sqrt(sum / data.length) * gain;
+              const normalized = Math.min(1, rms * 4);
+              setLevel(normalized);
+              if (normalized >= threshold) {
+                onAboveThreshold(normalized);
+                belowSince = 0;
+              } else {
+                belowSince++;
+                if (belowSince % 10 === 0) {
+                  setSilencePoints(p => {
+                    const nv = p + 1;
+                    onClassSilenceIncrement(1);
+                    onBelowThreshold(normalized);
+                    return nv;
+                  });
+                }
+              }
+              rafRef.current = requestAnimationFrame(tick);
             }
-            return this.props.children;
+            rafRef.current = requestAnimationFrame(tick);
+          } catch (e) {
+            console.error(e);
+            setPermission('denied');
           }
         }
-
-        // --- HİBRİT GRAFİK BİLEŞENİ ---
-        const HybridChart = ({ stdId, students, exams }) => {
-          const width = 800;
-          const height = 240;
-          const padding = 40;
-          
-          const examPoints = exams.map((e, i) => {
-            const net = Number(e.results?.[stdId]?.net) || 0;
-            const qCount = Number(e.qCount) || 1;
-            const percentage = (net / qCount) * 100;
-            // Sıfıra bölünme hatası düzeltilmiş koordinat hesabı
-            const x = exams.length > 1 
-                      ? padding + (i * (width - 2 * padding) / (exams.length - 1))
-                      : width / 2;
-            const y = height - padding - ((percentage / 100) * (height - 2 * padding));
-            return { x, y, val: percentage, name: e.name };
-          });
-
-          return (
-            <div className="relative bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-              <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-                <defs>
-                  <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                </defs>
-                {/* Eksenler */}
-                <line x1={padding} y1={height-padding} x2={width-padding} y2={height-padding} stroke="#f1f5f9" strokeWidth="2" />
-                
-                {/* Çizgi */}
-                {examPoints.length > 1 && (
-                  <path
-                    d={`M ${examPoints.map(p => `${p.x},${p.y}`).join(' L ')}`}
-                    fill="none"
-                    stroke="url(#lineGrad)"
-                    strokeWidth="4"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                )}
-
-                {/* Noktalar */}
-                {examPoints.map((p, i) => (
-                  <g key={i} className="group cursor-pointer">
-                    <circle cx={p.x} cy={p.y} r="6" fill="#fff" stroke="#6366f1" strokeWidth="3" />
-                    <text x={p.x} y={p.y - 15} textAnchor="middle" className="text-[10px] font-bold fill-slate-600">
-                      %{p.val.toFixed(1)}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            </div>
-          );
+        start();
+        return () => {
+          mounted = false;
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') audioCtxRef.current.close().catch(()=>{});
         };
+      }, [enabled]);
 
-        // --- ANA APP BİLEŞENİ ---
-        const { useState, useEffect, useCallback, useMemo } = React;
+      useEffect(() => {
+        try { if (gainNodeRef.current) gainNodeRef.current.gain.value = gain; } catch {}
+      }, [gain]);
 
-        function App() {
-          const [page, setPage] = useState('dashboard');
-          const [classes, setClasses] = useState(() => storage.get('ap_v13_classes', []));
-          const [selClass, setSelClass] = useState(() => storage.get('ap_v13_selClass', null));
-          const [students, setStudents] = useState([]);
-          const [exams, setExams] = useState([]);
-          const [homeworks, setHomeworks] = useState([]);
-          const [detailStudent, setDetailStudent] = useState(null);
+      if (!enabled) {
+        return (
+          <div className="bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 text-center">
+            <div className="text-sm text-slate-600 mb-3">Ses Ölçer <strong>KAPAL</strong></div>
+            <button onClick={() => setEnabled(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-md font-bold">Etkinleştir</button>
+            <div className="text-xs text-slate-500 mt-2">(Akıllı tahtalarda mikrofon yoksa kapalı bırakın)</div>
+          </div>
+        );
+      }
 
-          // Sınıf değişince verileri çek
-          useEffect(() => {
-            if (selClass) {
-              setStudents(storage.get(`s13_${selClass.id}`, []));
-              setExams(storage.get(`e13_${selClass.id}`, []));
-              setHomeworks(storage.get(`h13_${selClass.id}`, []));
-              storage.set('ap_v13_selClass', selClass);
+      const levelColor = level > threshold ? '#ef4444' : level > threshold*0.6 ? '#f59e0b' : '#10b981';
+
+      return (
+        <div className="bg-white p-4 rounded-2xl shadow w-full max-w-md">
+          <div className="flex items-center justify-between mb-2">
+            <h5 className="font-bold text-sm">Ses Ölçer</h5>
+            <button onClick={() => setEnabled(false)} className="text-xs text-red-500 hover:text-red-700 font-bold">Kapat</button>
+          </div>
+
+          <div className="flex gap-4">
+            <div style={{width:120, height:120, borderRadius:999, background:`radial-gradient(circle at 30% 30%, rgba(99,102,241,0.12), transparent), conic-gradient(${levelColor} ${level*360}deg, #e6e9ef 0deg)`}} className="flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-2xl font-extrabold">{Math.round(level*100)}</div>
+                <div className="text-[11px] text-slate-400">Seviye</div>
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="mb-3">
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div style={{width:`${Math.min(100, level*100)}%`, height:'100%', background: levelColor}} />
+                </div>
+                <div className="text-[11px] mt-2">Eşik: {Math.round(threshold*100)}%</div>
+              </div>
+
+              <div className="mb-2">
+                <label className="text-[11px]">Hassasiyet (Gain): {gain.toFixed(2)}</label>
+                <input type="range" min="0.2" max="3" step="0.01" value={gain} onChange={(e)=>setGain(Number(e.target.value))} />
+              </div>
+
+              <div className="text-[12px] text-slate-600">
+                Sessizlik Puanı: <span className="font-bold text-indigo-600">{silencePoints}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex gap-2">
+            <button onClick={() => { setSilencePoints(0); }} className="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">Sıfırla Puan</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== DAILY QUESTIONS ====================
+    const QUESTIONS = [
+      "Dünyanın en hızlı karada koşan hayvanı hangisidir ve saatte yaklaşık kaç km hız yapar?",
+ 
+    ];
+
+    function FlashyTimer({ duration, onFinish, running, setRunning }) {
+      const [timeLeft, setTimeLeft] = useState(duration);
+      const rafRef = useRef(null);
+      const pauseOffsetRef = useRef(0);
+
+      useEffect(()=> {
+        setTimeLeft(duration);
+        pauseOffsetRef.current = 0;
+      }, [duration]);
+
+      useEffect(()=> {
+        if (running) {
+          const startMs = performance.now();
+          function tick(now) {
+            const elapsed = now - startMs + pauseOffsetRef.current*1000;
+            const remaining = Math.max(0, duration - (elapsed/1000));
+            setTimeLeft(remaining);
+            if (remaining <= 0) {
+              setRunning(false);
+              onFinish && onFinish();
+              playFinalSound();
+              return;
             }
-          }, [selClass]);
+            rafRef.current = requestAnimationFrame(tick);
+          }
+          rafRef.current = requestAnimationFrame(tick);
+        } else {
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        }
+        return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+      }, [running]);
 
-          // Veri Kaydetme Fonksiyonları
-          const saveStudents = (data) => { setStudents(data); storage.set(`s13_${selClass.id}`, data); };
-          const saveExams = (data) => { setExams(data); storage.set(`e13_${selClass.id}`, data); };
-          
-          const handleAddClass = () => {
-            const name = prompt("Sınıf Adı:");
-            if (!name) return;
-            const newClass = { id: generateId(), name: sanitize(name) };
-            const updated = [...classes, newClass];
-            setClasses(updated);
-            storage.set('ap_v13_classes', updated);
-          };
+      const toggle = () => {
+        if (running) {
+          setRunning(false);
+          pauseOffsetRef.current = duration - timeLeft;
+        } else {
+          setRunning(true);
+        }
+      };
 
-          const addLog = (stdId, type, amount, reason) => {
-            const updated = students.map(s => {
-              if (s.id === stdId) {
-                const newPuan = (Number(s.puan) || 0) + Number(amount);
-                const newLog = {
-                  id: generateId(),
-                  date: new Date().toLocaleString('tr-TR'),
-                  type, amount, reason, currentTotal: newPuan
-                };
-                return { ...s, puan: newPuan, logs: [newLog, ...(s.logs || [])].slice(0, 100) };
-              }
-              return s;
-            });
-            saveStudents(updated);
-          };
+      const reset = () => {
+        setRunning(false);
+        setTimeLeft(duration);
+        pauseOffsetRef.current = 0;
+      };
 
-          // Render Dashboard
-          if (page === 'dashboard' || !selClass) {
-            return (
-              <div className="min-h-screen bg-slate-50 p-8">
-                <div className="max-w-6xl mx-auto">
-                  <header className="flex justify-between items-center mb-12">
-                    <div>
-                      <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                        <Sparkles className="text-indigo-600 w-10 h-10" /> Asistan <span className="text-indigo-600">V13</span>
-                      </h1>
-                      <p className="text-slate-500 mt-2 font-medium">Eğitim Yönetim Sistemi</p>
+      const pct = Math.max(0, Math.min(1, (timeLeft / duration)));
+      const mm = String(Math.floor(timeLeft/60)).padStart(2,'0');
+      const ss = String(Math.floor(timeLeft%60)).padStart(2,'0');
+
+      return (
+        <div className="timer-card">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-sm font-bold text-indigo-600">GÜNÜN SORUSU</div>
+              <div className="text-xs text-slate-400">Hemen sor, sınıfla paylaş, kronometreyi başlat.</div>
+            </div>
+            <div className="text-xs text-slate-500">Süre: <strong>{duration}s</strong></div>
+          </div>
+
+          <div className="timer-center">
+            <svg width="320" height="320" viewBox="0 0 200 200" style={{position:'absolute'}}>
+              <defs>
+                <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="50%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#fb7185" />
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="86" stroke="rgba(15,23,42,0.06)" strokeWidth="18" fill="none" />
+              <circle cx="100" cy="100" r="86" stroke="url(#g1)" strokeWidth="10" strokeLinecap="round" fill="none"
+                strokeDasharray={2*Math.PI*86}
+                strokeDashoffset={(1-pct)*2*Math.PI*86}
+                style={{ transition: running ? 'stroke-dashoffset 0.2s linear' : 'stroke-dashoffset 0.3s ease' }}
+              />
+              <circle cx="100" cy="100" r="60" stroke="rgba(99,102,241,0.07)" strokeWidth="12" fill="none" />
+            </svg>
+
+            <div className="timer-value">
+              <div className="big">{mm}:{ss}</div>
+              <div className="small">{Math.max(0, Math.ceil(timeLeft))} saniye kaldı</div>
+              <div style={{marginTop:12}}>
+                <button onClick={toggle} className={`px-6 py-3 rounded-full font-bold text-white ${running ? 'bg-rose-500' : 'bg-indigo-600'}`} >
+                  {running ? 'DURDUR' : 'BAŞLAT'}
+                </button>
+                <button onClick={reset} className="ml-3 px-4 py-2 rounded-full bg-slate-100 font-bold">SIFIRLA</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function DailyQuestions({ students = [], addLog = () => {} }) {
+      const [idx, setIdx] = useState(0);
+      const [duration, setDuration] = useState(30);
+      const [running, setRunning] = useState(false);
+
+      const next = () => setIdx(i => (i+1)%QUESTIONS.length);
+      const prev = () => setIdx(i => (i-1+QUESTIONS.length)%QUESTIONS.length);
+
+      const awardQuick = (studentId, amount) => {
+        addLog(studentId, 'HIZLI', amount, `Hızlı Parmak: +${amount} P`);
+        playPointSound(amount);
+      };
+
+      return (
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2">
+              <div className="bg-white p-6 rounded-3xl shadow">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-xs text-indigo-600 font-bold">GÜNÜN SORUSU</div>
+                    <div className="text-sm text-slate-400">Eğlenceli ve düşündürücü — öğrencileri konuştur</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={prev} className="px-3 py-1 bg-slate-100 rounded">◀</button>
+                    <button onClick={next} className="px-3 py-1 bg-slate-100 rounded">▶</button>
+                    <select value={duration} onChange={(e)=>setDuration(Number(e.target.value))} className="p-1 rounded bg-slate-50">
+                      <option value={30}>30s</option>
+                      <option value={45}>45s</option>
+                      <option value={60}>60s</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="text-2xl font-extrabold text-slate-800 mb-3">{QUESTIONS[idx]}</div>
+                  <div className="text-xs text-slate-500 mb-2">Öğretmen sözel olarak sorup kronometreyi başlatabilir veya ekrandan başlatabilirsiniz.</div>
+
+                  <div className="flex justify-center mt-6">
+                    <FlashyTimer duration={duration} onFinish={() => alert('Süre doldu!')} running={running} setRunning={setRunning} />
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="text-sm font-bold mb-2">Açıklama / Notlar (isteğe bağlı)</div>
+                  <textarea placeholder="Kısa ipucu veya cevap notu..." className="w-full p-3 border rounded-xl min-h-[80px]" />
+                </div>
+              </div>
+            </div>
+
+            <aside>
+              <div className="bg-white p-4 rounded-2xl shadow">
+                <div className="text-sm font-bold text-indigo-600 mb-2">HAFTALIK SINIF RAPORU</div>
+                <div className="text-xs text-slate-500 mb-3">Kısa özet ve haftalık puan liderleri</div>
+                <div className="bg-indigo-50 p-3 rounded">
+                  <div className="text-xs">Toplam Ödev</div>
+                  <div className="text-lg font-bold">—</div>
+                </div>
+              </div>
+
+              <div className="mt-4 bg-white p-4 rounded-2xl shadow">
+                <div className="text-sm font-bold mb-3">Hızlı Parmak</div>
+                <div className="quick-finger">
+                  {students.length === 0 && <div className="text-xs text-slate-400">Öğrenci yok</div>}
+                  {students.map((s, i) => (
+                    <div key={s.id} className="student-chip" style={{ background: ['#fef3c7','#ede9fe','#ecfeff','#eef2ff'][i % 4] }}>
+                      <div className="name">{s.name}</div>
+                      <div>
+                        <button onClick={() => awardQuick(s.id, 3)} className="award bg-indigo-600 text-white">+3</button>
+                      </div>
                     </div>
-                  </header>
+                  ))}
+                </div>
+                <div className="text-xs text-slate-400 mt-3">Hızlı puan vermek için isimlerin yanındaki butonu kullan.</div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      );
+    }
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <button 
-                      onClick={handleAddClass}
-                      className="h-64 border-4 border-dashed border-slate-200 rounded-[40px] flex flex-col items-center justify-center gap-4 text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group"
-                    >
-                      <div className="p-4 bg-slate-100 rounded-2xl group-hover:bg-indigo-100 transition-colors">
-                        <Plus size={32} />
-                      </div>
-                      <span className="font-bold text-lg">Yeni Sınıf Oluştur</span>
-                    </button>
+    // ==================== V15: LEADERBOARD SCROLLER ====================
+    function LeaderboardScroller({ students = [] }) {
+      const [displayData, setDisplayData] = useState([]);
+      
+      useEffect(() => {
+        const sorted = [...students].sort((a,b) => (b.puan||0) - (a.puan||0)).slice(0, 25);
+        setDisplayData(sorted);
+        
+        const interval = setInterval(() => {
+          setDisplayData([...students].sort((a,b) => (b.puan||0) - (a.puan||0)).slice(0, 25));
+        }, 5 * 60 * 1000);
+        
+        return () => clearInterval(interval);
+      }, [students]);
 
-                    {classes.map(c => (
-                      <div 
-                        key={c.id}
-                        onClick={() => { setSelClass(c); setPage('students'); }}
-                        className="bg-white p-10 rounded-[40px] shadow-xl shadow-slate-200/50 border border-slate-100 hover:-translate-y-2 transition-all cursor-pointer group relative overflow-hidden"
-                      >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <Users size={80} />
-                        </div>
-                        <h3 className="text-3xl font-bold text-slate-800 mb-2">{c.name}</h3>
-                        <p className="text-indigo-600 font-bold flex items-center gap-2">Sınıfa Git <ChevronRight size={18}/></p>
+      if (displayData.length === 0) return null;
+
+      return (
+        <div className="leaderboard-scroller">
+          <div className="leaderboard-scroller-content">
+            {displayData.map((s, i) => (
+              <div key={s.id} className="leaderboard-item">
+                <span className="leaderboard-rank">#{i + 1}</span>
+                <span className="leaderboard-name">{s.name}</span>
+                <span className="leaderboard-points">{s.puan || 0}P</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== TAB COMPONENT ====================
+    const Tab = ({active,onClick,icon:IconComp,label}) => (
+      <button onClick={onClick} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all ${active ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`} aria-pressed={active}>
+        <IconComp className="w-4 h-4" /> <span className="hidden sm:inline">{label}</span>
+      </button>
+    );
+
+    // PART2 BITTI - PART3'E GEÇ
+    // ==================== DASHBOARD ====================
+    const Dashboard = ({ classes, onAddClass, onSelectClass, onDeleteClass }) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10">
+        <button onClick={onAddClass} className="h-28 border-2 border-dashed border-slate-300 rounded-3xl font-bold text-slate-500 hover:text-indigo-600 hover:border-indigo-200 transition-all flex items-center justify-center gap-2 small-btn">
+          <Plus className="w-5 h-5" /> Yeni Sınıf
+        </button>
+        {classes.map(c => (
+          <div key={c.id} onClick={() => onSelectClass(c)} className="bg-white p-10 rounded-3xl shadow-xl border-b-8 border-indigo-600 hover:-translate-y-2 transition-all cursor-pointer relative group">
+            <button onClick={(e)=>{ e.stopPropagation(); onDeleteClass(c.id); }} className="absolute top-5 right-5 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">🗑</button>
+            <h3 className="text-3xl font-extrabold text-slate-800">{c.name}</h3>
+            <p className="mt-3 text-xs text-slate-400">Tıklayın — sınıf detayları için</p>
+          </div>
+        ))}
+      </div>
+    );
+
+    // ==================== STUDENT LIST (V15: Level Display) ====================
+    const StudentList = ({ students, onAddStudent, onAddBulk, onDeleteStudent, levelFlashIds = [], onManualAdd }) => {
+      const [name,setName] = useState(''); 
+      const [bulkText,setBulkText] = useState(''); 
+      const [showBulk,setShowBulk] = useState(false);
+      
+      const handleAdd = () => { 
+        const cleaned = sanitize(name); 
+        if (cleaned) { 
+          onAddStudent(cleaned); 
+          setName(''); 
+        } 
+      };
+      
+      const handleBulk = () => { 
+        const names = bulkText.split('\n').map(l=>sanitize(l)).filter(Boolean); 
+        if (names.length){ 
+          onAddBulk(names); 
+          setBulkText(''); 
+          setShowBulk(false); 
+        } 
+      };
+      
+      return (
+        <div className="bg-white rounded-3xl p-10 shadow-2xl">
+          <div className="flex justify-between items-center mb-8 border-b pb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2"><Users className="w-6 h-6" /> Öğrenci Yönetimi</h2>
+            <button onClick={()=>setShowBulk(!showBulk)} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-xs flex items-center gap-2"><Plus className="w-4 h-4" /> {showBulk ? 'Tekil Ekle' : 'Toplu Ekle'}</button>
+          </div>
+          {showBulk ? (
+            <div className="mb-8 space-y-4">
+              <textarea value={bulkText} onChange={(e)=>setBulkText(e.target.value)} placeholder="Her satıra bir öğrenci adı yazın..." className="w-full p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500 min-h-[160px]" />
+              <button onClick={handleBulk} className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold"><Save className="w-4 h-4 inline mr-2" /> Kaydet</button>
+            </div>
+          ) : (
+            <div className="mb-8 flex gap-2">
+              <input value={name} onChange={(e)=>setName(e.target.value)} onKeyPress={(e)=>e.key==='Enter' && handleAdd()} placeholder="Öğrenci adı..." className="flex-1 p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+              <button onClick={handleAdd} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold">Ekle</button>
+            </div>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {students.map(s=>{
+              const lvl = getLevelFromPoints(s.puan || 0);
+              const progress = getProgressPercent(s.puan || 0);
+              const flashing = Array.isArray(levelFlashIds) && levelFlashIds.includes(s.id);
+              return (
+              <div key={s.id} className={`p-4 bg-slate-50 rounded-xl border flex flex-col gap-2 text-xs ${flashing ? 'animate-pulse bg-yellow-50' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <span className="truncate font-bold">{s.name}</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={()=>{ const v = parseInt(prompt('Manuel puan (örn. +5 veya -3):','5'),10); if(!isNaN(v) && v!==0) onManualAdd && onManualAdd(s.id, v); }} className="text-indigo-600 bg-white px-2 py-1 rounded-md text-[12px] font-bold">Manuel</button>
+                    <button onClick={()=>onDeleteStudent(s.id)} className="text-red-400 hover:text-red-600 ml-2" aria-label={`${s.name} sil`}>✖</button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="level-badge"><span style={{fontSize:14}}>{avatarForLevel(lvl)}</span><span>Lv {lvl} · {labelForLevel(lvl)}</span></div>
+                  <div className="text-xs text-slate-500">{s.puan || 0} P</div>
+                </div>
+                <div className="mt-2">
+                  <div className="level-progress-mini"><i style={{width:`${progress}%`}} /></div>
+                </div>
+              </div>
+            )})}
+          </div>
+          {students.length===0 && <div className="text-center py-12 text-slate-400"><Users className="w-16 h-16 mx-auto mb-4 opacity-20"/><p>Henüz öğrenci eklenmedi</p></div>}
+        </div>
+      );
+    };
+
+    // ==================== HOMEWORK MANAGER ====================
+    const HomeworkManager = ({ students, homeworks, onSaveHomeworks, onAddLog }) => {
+      const [hwTitle, setHwTitle] = useState('');
+      const handleAddHomework = () => { 
+        const t = sanitize(hwTitle); 
+        if(t){ 
+          onSaveHomeworks([...homeworks, { id: generateId(), title:t, results:{} }]); 
+          setHwTitle(''); 
+        } 
+      };
+      
+      const handleBulkUpdate = (hwId, status) => {
+        const hw = homeworks.find(h=>h.id===hwId); 
+        const points = status==='done'?10:status==='partial'?5:0;
+        students.forEach(s=>{ 
+          const prev = hw.results?.[s.id] || 'none'; 
+          const prevPoints = prev==='done'?10:prev==='partial'?5:0; 
+          const diff = points - prevPoints; 
+          if(diff!==0) onAddLog(s.id,'ÖDEV',diff,hw.title); 
+        });
+        const newResults={}; 
+        students.forEach(s=>newResults[s.id]=status); 
+        onSaveHomeworks(homeworks.map(h=>h.id===hwId?{...h,results:newResults}:h));
+      };
+      
+      const handleIndividualUpdate = (hwId,stdId,status) => { 
+        const hw = homeworks.find(h=>h.id===hwId); 
+        const prev = hw?.results?.[stdId]||'none'; 
+        const points = status==='done'?10:status==='partial'?5:0; 
+        const prevPoints = prev==='done'?10:prev==='partial'?5:0; 
+        const diff = points - prevPoints; 
+        if(diff!==0) onAddLog(stdId,'ÖDEV',diff,hw.title); 
+        onSaveHomeworks(homeworks.map(h=>h.id===hwId?{...h,results:{...h.results,[stdId]:status}}:h)); 
+      };
+      
+      return (
+        <div className="bg-white rounded-3xl p-10 shadow-2xl overflow-x-auto">
+          <div className="flex justify-between items-center mb-8 border-b pb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" /> Ödev Yönetimi</h2>
+            <div className="flex gap-2">
+              <input value={hwTitle} onChange={(e)=>setHwTitle(e.target.value)} placeholder="Ödev konusu..." className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+              <button onClick={handleAddHomework} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"><Plus className="w-4 h-4" /></button>
+            </div>
+          </div>
+          {homeworks.length > 0 ? (
+            <table className="w-full">
+              <thead><tr><th className="text-left pb-4 font-bold text-xs text-slate-400">ÖĞRENCİ</th>
+                {homeworks.map(h=>(<th key={h.id} className="px-2"><div className="flex flex-col items-center gap-1 mb-4"><span className="text-[10px] font-bold text-indigo-600 mb-2">{h.title}</span><div className="flex gap-1"><button onClick={()=>handleBulkUpdate(h.id,'done')} className="text-[8px] bg-green-100 text-green-600 px-2 py-1 rounded font-bold">TAM</button><button onClick={()=>handleBulkUpdate(h.id,'partial')} className="text-[8px] bg-yellow-100 text-yellow-600 px-2 py-1 rounded font-bold">AZ</button><button onClick={()=>handleBulkUpdate(h.id,'none')} className="text-[8px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold">YOK</button></div></div></th>))}
+              </tr></thead>
+              <tbody>{students.map(s=>(<tr key={s.id} className="border-t hover:bg-slate-50"><td className="py-3 text-xs font-bold">{s.name}</td>{homeworks.map(h=>(<td key={h.id} className="text-center"><div className="flex gap-1 justify-center">{['done','partial','none'].map(st=>(<button key={st} onClick={()=>handleIndividualUpdate(h.id,s.id,st)} className={`px-2 py-1 rounded-lg text-[8px] font-bold transition-all ${h.results?.[s.id]===st ? (st==='done'?'bg-green-500 text-white':st==='partial'?'bg-yellow-500 text-white':'bg-red-500 text-white') : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{st==='done'?'TAM':st==='partial'?'AZ':'YOK'}</button>))}</div></td>))}</tr>))}</tbody>
+            </table>
+          ) : (<div className="text-center py-12 text-slate-400"><FileText className="w-16 h-16 mx-auto mb-4 opacity-20" /><p>Henüz ödev eklenmedi</p></div>)}
+        </div>
+      );
+    };
+
+    // ==================== EXAM MANAGER ====================
+   const ExamManager = ({ students, exams, onSaveExams, onStartExamTimer, onAddLog }) => {
+
+      const [examTitle, setExamTitle] = useState(''); 
+      const [examQCount, setExamQCount] = useState('');
+      
+      const handleAddExam = () => { 
+        const title = sanitize(examTitle); 
+        const qCount = parseInt(examQCount); 
+        if (title && qCount>0) { 
+          onSaveExams([...exams,{id:generateId(),title,qCount,results:{}}]); 
+          setExamTitle(''); 
+          setExamQCount(''); 
+        } 
+      };
+      
+      const handleUpdateResult = (examId,stdId,field,rawVal) => {
+        const value = Math.max(0, Math.floor(Number(rawVal)||0));
+        onSaveExams(exams.map(e=>{ 
+          if(e.id===examId){ 
+            const qCount=Number(e.qCount)||0; 
+            const prev=e.results?.[stdId]||{d:0,y:0,net:0}; 
+            const newD=field==='d'?value:prev.d; 
+            const newY=field==='y'?value:prev.y; 
+            if(newD+newY>qCount){ alert(`Geçersiz giriş: Doğru+Yanlış toplamı (${newD+newY}) soru sayısını (${qCount}) aşıyor.`); return e; } 
+            const net=Math.max(0,newD-(newY/3)); 
+            return {...e,results:{...e.results,[stdId]:{d:newD,y:newY,net}} } 
+          } 
+          return e; 
+        }));
+      };
+
+      const handleDeleteExam = (id) => {
+        if (!confirm('Bu sınav silinecek. Emin misiniz?')) return;
+        onSaveExams(exams.filter(e => e.id !== id));
+      };
+
+      // ==================== SINAV PUANLARINI DAĞIT (MANUEL) ====================
+
+const distributeExamPoints = (examId) => {
+  const exam = exams.find(e => e.id === examId);
+  if (!exam) return;
+
+  const ranking = students
+    .map(s => ({
+      id: s.id,
+      net: Number(exam.results?.[s.id]?.net)
+    }))
+    .filter(r => !isNaN(r.net) && r.net > 0)
+    .sort((a, b) => b.net - a.net);
+
+  ranking.slice(0, 10).forEach((r, index) => {
+    const pointAward = 10 - index;
+
+    if (pointAward > 0) {
+      onAddLog(
+        r.id,
+        "SINAV_PUAN",
+        pointAward,
+`📘 ${exam.title} sınavı → Derece #${index + 1}`
+
+      );
+    }
+  });
+
+  alert("🏆 Puanlar başarıyla dağıtıldı!");
+};
+
+ 
+      return (
+        <div className="bg-white rounded-3xl p-10 shadow-2xl">
+          <div className="flex justify-between items-center mb-8 border-b pb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-6 h-6" /> Deneme Sınavları</h2>
+            <div className="flex gap-2">
+              <input value={examTitle} onChange={(e)=>setExamTitle(e.target.value)} placeholder="Sınav konusu..." className="p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" />
+              <input type="number" value={examQCount} onChange={(e)=>setExamQCount(e.target.value)} placeholder="Soru sayısı" className="w-32 p-2 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500" min="1" />
+              <button onClick={handleAddExam} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold"><Plus className="w-4 h-4" /></button>
+            </div>
+          </div>
+          <div className="space-y-6">
+            {exams.map(e=>(
+              <div key={e.id} className="p-6 bg-slate-50 rounded-3xl border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-indigo-700">{e.title} <span className="text-slate-400 ml-2">({e.qCount} Soru)</span></h3>
+                 
+<div className="flex gap-2">
+<button
+ 
+  onClick={() => distributeExamPoints(e.id)}
+className="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white"
+
+>
+  🏆 Puanları Dağıt
+</button>
+<button
+  onClick={() => handleDeleteExam(e.id)}
+  className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white"
+>
+  🗑 Sil
+</button>
+
+
+                    <button onClick={()=>{
+                      const m = parseInt(prompt('Sınav için süre (dakika):', '45'),10);
+                      if (!isNaN(m) && m>0) {
+                        if (typeof onStartExamTimer === 'function') onStartExamTimer(e.id, e.title, m*60);
+                      }
+                    }} className="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold">Zamanlayıcı Başlat</button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {students.map(s=>{ 
+                    const cur = e.results?.[s.id] || { d:'', y:'', net:0 }; 
+                    return (
+                    <div key={s.id} className="bg-white p-3 rounded-xl border flex flex-col gap-2">
+                      <span className="font-bold text-[10px] truncate">{s.name}</span>
+                      <div className="flex gap-2">
+                        <input type="number" placeholder="D" className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none" value={cur.d===''? '': cur.d} onChange={(ev)=>handleUpdateResult(e.id,s.id,'d',ev.target.value)} min="0" max={e.qCount} />
+                        <input type="number" placeholder="Y" className="w-full p-2 border rounded-lg font-bold text-center text-xs focus:ring-2 focus:ring-indigo-500 outline-none" value={cur.y===''? '': cur.y} onChange={(ev)=>handleUpdateResult(e.id,s.id,'y',ev.target.value)} min="0" max={e.qCount} />
                       </div>
-                    ))}
+                      <div className="text-[9px] text-center font-bold text-indigo-400">NET: {( (e.results?.[s.id]?.net || 0) ).toFixed(2)}</div>
+                    </div>
+                  )})}
+                </div>
+              </div>
+            ))}
+            {exams.length===0 && <div className="text-center py-12 text-slate-400"><FileText className="w-16 h-16 mx-auto mb-4 opacity-20" /><p>Henüz sınav eklenmedi</p></div>}
+          </div>
+        </div>
+      );
+    };
+
+    // ==================== NAME SCROLLER (KURA) ====================
+    function NameScroller({ students, drawnStudents, onDraw, onReset, onAddLog, onRemoveStudent }) {
+      const [isRunning, setIsRunning] = useState(false);
+      const [displayName, setDisplayName] = useState('');
+      const [highlightedId, setHighlightedId] = useState(null);
+
+      const drawnSafe = Array.isArray(drawnStudents) ? drawnStudents : [];
+      const available = Array.isArray(students) ? students.filter(s => !drawnSafe.includes(s.id)) : [];
+
+      const tickIntervalRef = useRef(null);
+
+      const startDraw = () => {
+        if (available.length === 0) { alert('Çekilebilecek öğrenci yok.'); return; }
+        ensureAudioResume();
+        setIsRunning(true);
+        setHighlightedId(null);
+        playSpinStart();
+
+        const totalTime = 4000;
+        tickIntervalRef.current = setInterval(() => {
+          playTickSound();
+          const pick = available[Math.floor(Math.random() * available.length)];
+          setDisplayName(pick.name);
+        }, 70);
+
+        setTimeout(() => {
+          if (tickIntervalRef.current) { clearInterval(tickIntervalRef.current); tickIntervalRef.current = null; }
+          const selected = available[Math.floor(Math.random() * available.length)];
+          setDisplayName(selected.name);
+          setHighlightedId(selected.id);
+          try {
+            if (typeof onDraw === 'function') onDraw(selected.id);
+          } catch (e) {
+            console.error('onDraw error', e);
+          }
+          playFinalSound();
+          setIsRunning(false);
+        }, totalTime);
+      };
+
+      const handleAward = (amount) => {
+        if (!highlightedId) return;
+        onAddLog && onAddLog(highlightedId, 'KURA', amount, 'Kura Ödülü');
+        playPointSound(amount);
+      };
+
+      const handleReset = () => {
+        try {
+          if (typeof onReset === 'function') onReset();
+        } catch (e) {
+          console.error('onReset threw', e);
+        }
+        try { setDisplayName(''); } catch {}
+        try { setHighlightedId(null); } catch {}
+      };
+
+      return (
+        <div className="bg-slate-900 rounded-3xl p-8 text-center shadow-2xl min-h-[560px] flex flex-col items-center gap-6 relative">
+          <div className="text-indigo-300 font-bold uppercase mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5" /> Şans (İsim Kaydırma)</div>
+
+          <div className="scroller-wrap">
+            <div className="scroller-window">
+              <div className="name-wrapper">
+                {displayName ? (
+                  <div className={`name-item ${highlightedId ? 'active' : 'dim'}`} style={{ background: highlightedId ? 'linear-gradient(90deg,#06b6d4,#6366f1)' : 'transparent', color: highlightedId ? '#fff' : undefined }}>
+                    {displayName}
+                  </div>
+                ) : (
+                  <div className="name-item dim">Hazır Bekliyor</div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-3 items-center justify-center">
+              <button onClick={startDraw} disabled={isRunning || available.length===0} className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-extrabold text-lg disabled:opacity-60 disabled:cursor-not-allowed">ÇEK!</button>
+              <button onClick={handleReset} className="bg-slate-800 text-white px-4 py-3 rounded-2xl font-bold">Sıfırla</button>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-3 rounded-2xl shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs text-slate-400">Çekilebilecek Öğrenciler</div>
+                  <div className="text-xs text-slate-500">{available.length} / {Array.isArray(students) ? students.length : 0}</div>
+                </div>
+                <div className="flex flex-wrap gap-2 max-h-36 overflow-auto">
+                  {available.map(s => (<div key={s.id} className="flex items-center gap-2 bg-indigo-50 px-2 py-1 rounded-full text-xs font-bold"><span>{s.name}</span></div>))}
+                  {available.length===0 && <div className="text-xs text-slate-400">Yok</div>}
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl shadow text-center">
+                <div className="text-xs text-slate-400 mb-2">Son Çekilen / İşlemler</div>
+                {highlightedId ? (
+                  <>
+                    <div className="text-2xl font-extrabold text-indigo-700 mb-3">{displayName}</div>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      {Array.from({length:11}).map((_, idx) => {
+                        const v = idx - 5;
+                        const isPos = v > 0;
+                        return (
+                          <button key={v} onClick={() => handleAward(v)} className={`w-12 h-12 ${isPos ? 'bg-emerald-500' : (v<0 ? 'bg-rose-500' : 'bg-indigo-500')} text-white rounded-xl font-extrabold text-lg shadow hover:scale-105 transition-transform`}>
+                            {v > 0 ? `+${v}` : v}
+                          </button>
+                        );
+                      })}
+                      <button onClick={() => { if (confirm('Öğrenciyi listeden silmek istiyor musunuz?')) { onRemoveStudent && onRemoveStudent(highlightedId); setHighlightedId(null); setDisplayName(''); } }} className="w-14 h-12 bg-slate-300 text-slate-800 rounded-xl font-bold">Sil</button>
+                    </div>
+                  </>
+                ) : (<div className="text-sm text-slate-500">Henüz seçim yok</div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== STATS PAGE ====================
+    const StatsPage = ({ students, exams, onShowDetail }) => {
+      const calcAvg = (std) => {
+        const results = exams.map(e => e.results?.[std.id]).filter(r => r && typeof r.net === 'number');
+        if (!results.length) return 0;
+        return results.reduce((s, r) => s + r.net, 0) / results.length;
+      };
+      const sorted = [...students].sort((a,b) => calcAvg(b) - calcAvg(a));
+      return (
+        <div className="space-y-4">
+          <h2 className="text-center font-bold text-3xl mb-6 flex items-center justify-center gap-2"><Trophy className="w-8 h-8 text-indigo-600" /> Başarı Analizi</h2>
+          {sorted.map(s => {
+            const avg = calcAvg(s).toFixed(2);
+            const points = exams.map((e, i) => ({ x: i, y: Number(e.results?.[s.id]?.net || 0) }));
+            const max = Math.max(1, ...points.map(p => p.y));
+            const pathD = points.map((p, i) => `${i===0 ? 'M' : 'L'} ${i*28} ${60 - (p.y/max)*50}`).join(' ');
+            return (
+              <div key={s.id} onClick={() => onShowDetail(s)} className="bg-white p-6 rounded-3xl shadow-xl flex justify-between items-center border-l-8 border-indigo-600 cursor-pointer hover:bg-slate-50 transition-all">
+                <div>
+                  <div className="text-xl font-bold text-slate-700">{s.name}</div>
+                  <div className="text-xs text-slate-400">Ort. Net: {avg}</div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <svg width="120" height="60" viewBox="0 0 300 80" className="bg-transparent">
+                    <path d={pathD} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+                  </svg>
+                  <div className="bg-indigo-50 px-6 py-2 rounded-2xl text-center">
+                    <p className="text-[9px] font-bold text-slate-400">Ortalama Net</p>
+                    <p className="text-xl font-bold text-indigo-600">{avg}</p>
                   </div>
                 </div>
               </div>
             );
-          }
+          })}
+          {students.length === 0 && <div className="text-center py-12 text-slate-400"><p>Henüz öğrenci yok</p></div>}
+        </div>
+      );
+    };
 
-          // Render Sınıf İçi (Basitleştirilmiş Liste - Senin v13 Yapın)
-          return (
-            <div className="min-h-screen bg-white">
-              <nav className="border-b border-slate-100 px-8 py-4 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-40">
-                <div className="flex items-center gap-6">
-                  <button onClick={() => setPage('dashboard')} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                    <ChevronLeft />
-                  </button>
-                  <h2 className="text-xl font-bold text-slate-800">{selClass.name}</h2>
+    // ==================== V16: VELİ MESAJI MODÜLÜ ====================
+    function VeliMesaji({ student, exams = [], students = [] }) {
+      const [tone, setTone] = useState('olumlu');
+      const [copied, setCopied] = useState(false);
+
+      // --- Puan trendi ---
+      const logs = student.logs || [];
+      const puanSimdi = student.puan || 0;
+      // Son 7 günlük kazanım
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      const haftalikKazanim = logs.reduce((sum, l) => {
+        try { if (new Date(l.date).getTime() >= weekAgo) return sum + Number(l.amount || 0); } catch {}
+        return sum;
+      }, 0);
+      // Son 30 günlük kazanım
+      const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const aylikKazanim = logs.reduce((sum, l) => {
+        try { if (new Date(l.date).getTime() >= monthAgo) return sum + Number(l.amount || 0); } catch {}
+        return sum;
+      }, 0);
+      const puanTrend = haftalikKazanim > 0 ? 'artıyor' : haftalikKazanim < 0 ? 'azalıyor' : 'sabit seyrediyor';
+
+      // --- Sınıf içi puan sırası ---
+      const sortedByPuan = [...students].sort((a, b) => (b.puan || 0) - (a.puan || 0));
+      const puanSira = sortedByPuan.findIndex(s => s.id === student.id) + 1;
+      const sinifMevcudu = students.length;
+
+      // --- Deneme net trendi ---
+      const studentExams = exams
+        .map(e => ({ title: e.title, net: Number(e.results?.[student.id]?.net ?? null) }))
+        .filter(e => !isNaN(e.net) && e.results !== undefined || true)
+        .map(e => ({ title: e.title, net: isNaN(Number(exams.find(x=>x.title===e.title)?.results?.[student.id]?.net)) ? null : Number(exams.find(x=>x.title===e.title)?.results?.[student.id]?.net) }))
+        .filter(e => e.net !== null);
+
+      // Daha temiz hesaplama
+      const examNets = exams
+        .map(e => {
+          const raw = e.results?.[student.id]?.net;
+          return raw !== undefined && raw !== null ? { title: e.title, net: Number(raw) } : null;
+        })
+        .filter(Boolean);
+
+      const sonDeneme = examNets.length > 0 ? examNets[examNets.length - 1] : null;
+      const oncekiDeneme = examNets.length > 1 ? examNets[examNets.length - 2] : null;
+      const netFark = sonDeneme && oncekiDeneme ? (sonDeneme.net - oncekiDeneme.net) : null;
+      const netTrend = netFark === null ? null : netFark > 0 ? `${netFark.toFixed(2)} net artış` : netFark < 0 ? `${Math.abs(netFark).toFixed(2)} net düşüş` : 'değişim yok';
+
+      // Sınıf ortalaması (son deneme)
+      let sinifOrtStr = '';
+      if (exams.length > 0 && students.length > 0) {
+        const lastExam = exams[exams.length - 1];
+        const nets = students.map(s => Number(lastExam.results?.[s.id]?.net || 0));
+        const ort = nets.reduce((a, b) => a + b, 0) / nets.length;
+        const fark = sonDeneme ? (sonDeneme.net - ort) : null;
+        sinifOrtStr = fark !== null
+          ? (fark >= 0
+            ? `sınıf ortalamasının ${fark.toFixed(2)} net üzerinde`
+            : `sınıf ortalamasının ${Math.abs(fark).toFixed(2)} net altında`)
+          : '';
+      }
+
+      // --- Ödev durumu (son 5 ödev) ---
+      // Burada log'lardan ÖDEV tiplerini çekiyoruz
+      const odevLogs = logs.filter(l => l.type === 'ÖDEV').slice(0, 5);
+      const odevTamSayisi = odevLogs.filter(l => Number(l.amount) >= 10).length;
+      const odevStr = odevLogs.length > 0
+        ? `Son ${odevLogs.length} ödevde ${odevTamSayisi} tanesini tam teslim etti.`
+        : '';
+
+      // --- Mesaj şablonları ---
+      const adSoyad = student.name;
+
+      const parcalar = {
+        puan: `${adSoyad}'ın sınıf içi toplam puanı ${puanSimdi} olup ${sinifMevcudu > 0 ? `${sinifMevcudu} öğrenci arasında ${puanSira}. sıradadır` : ''}. Son 7 günde ${haftalikKazanim > 0 ? '+' : ''}${haftalikKazanim} puan, son 30 günde ${aylikKazanim > 0 ? '+' : ''}${aylikKazanim} puan kazanmıştır; genel puan seyri ${puanTrend}.`,
+
+        net: sonDeneme
+          ? `En son deneme sınavında (${sonDeneme.title}) ${sonDeneme.net.toFixed(2)} net yapmıştır${sinifOrtStr ? `, ${sinifOrtStr}` : ''}. ${netTrend ? `Önceki denemeye göre ${netTrend} yaşanmıştır.` : ''}`
+          : 'Henüz işlenmiş deneme sınavı bulunmamaktadır.',
+
+        odev: odevStr,
+      };
+
+      const messages = {
+        olumlu: `Sayın Veli,\n\n${adSoyad} bu dönemde olumlu bir performans sergilemiştir.\n\n📊 Puan Durumu: ${parcalar.puan}\n\n📝 Deneme Performansı: ${parcalar.net}\n\n${odevStr ? `📚 Ödev: ${parcalar.odev}\n\n` : ''}Bu gelişimin devam etmesi için evde düzenli çalışma ortamı sağlamanız büyük katkı sunacaktır. İlginiz ve desteğiniz için teşekkür ederiz.`,
+
+        uyarı: `Sayın Veli,\n\n${adSoyad} hakkında dikkatinizi çekmek istediğimiz bazı gelişmeler bulunmaktadır.\n\n📊 Puan Durumu: ${parcalar.puan}\n\n📝 Deneme Performansı: ${parcalar.net}\n\n${odevStr ? `📚 Ödev: ${parcalar.odev}\n\n` : ''}Performansın artırılması için ev çalışmalarının düzenlenmesini ve gerekirse birlikte görüşülmesini öneririz. Desteğiniz kritik önem taşımaktadır.`,
+
+        bilgi: `Sayın Veli,\n\n${adSoyad}'ın güncel akademik durumunu bilgilerinize sunarım.\n\n📊 Puan Durumu: ${parcalar.puan}\n\n📝 Deneme Performansı: ${parcalar.net}\n\n${odevStr ? `📚 Ödev: ${parcalar.odev}\n\n` : ''}Herhangi bir konuda görüşmek isterseniz iletişime geçebilirsiniz.`,
+      };
+
+      const handleCopy = () => {
+        navigator.clipboard.writeText(messages[tone]).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }).catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = messages[tone];
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      };
+
+      return (
+        <div className="bg-white p-4 rounded-2xl shadow border border-indigo-50">
+          <div className="flex items-center justify-between mb-3">
+            <h5 className="text-sm font-bold text-indigo-600">📩 Veli Mesajı</h5>
+            <div className="flex gap-1">
+              {[['olumlu','✅ Olumlu'],['uyarı','⚠️ Uyarı'],['bilgi','ℹ️ Bilgi']].map(([k,v]) => (
+                <button key={k} onClick={() => { setTone(k); setCopied(false); }}
+                  className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${tone===k ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+          <pre className="text-[12px] text-slate-700 bg-slate-50 rounded-xl p-3 whitespace-pre-wrap font-sans leading-relaxed max-h-56 overflow-y-auto border border-slate-100">
+            {messages[tone]}
+          </pre>
+          <button onClick={handleCopy}
+            className={`mt-3 w-full py-2 rounded-xl font-bold text-sm transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}>
+            {copied ? '✅ Kopyalandı!' : '📋 Panoya Kopyala'}
+          </button>
+        </div>
+      );
+    }
+
+    // ==================== STUDENT DETAIL (V15: PDF + Reset/Restore) ====================
+    const StudentDetail = ({ student, students, exams, onClose, onAddLog, onResetPoints, onRestorePoints }) => {
+      const pointsCanvasRef = useRef(null);
+      const examCanvasRef = useRef(null);
+      const pointsChart = useRef(null);
+      const examChart = useRef(null);
+      const [manual, setManual] = useState('');
+
+      const safeFormatDate = (d) => {
+        if (!d) return '';
+        try { const dt = new Date(d); if (!isNaN(dt.getTime())) return dt.toLocaleString('tr-TR'); } catch { }
+        return String(d).slice(0,24);
+      };
+
+      useEffect(() => {
+        const logs = (student.logs || []).slice().reverse();
+        const labels = logs.map(l => {
+          try { const dt = new Date(l.date); return (!isNaN(dt.getTime())) ? dt.toLocaleString('tr-TR') : String(l.date || '').slice(0,24); } catch { return String(l.date || '').slice(0,24); }
+        });
+        const data = logs.map(l => Number(l.currentTotal || 0));
+        if (pointsChart.current) { try { pointsChart.current.destroy(); } catch{} pointsChart.current = null; }
+        if (pointsCanvasRef.current) {
+          pointsChart.current = new Chart(pointsCanvasRef.current, {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Toplam Puan', data, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.08)', tension:0.3, pointRadius:4 }] },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{ type:'category' }, y:{ beginAtZero:true } } }
+          });
+        }
+
+        const classAvgForExam = (exam) => {
+          const nets = (students || []).map(s=>Number(exam.results?.[s.id]?.net || 0));
+          const valid = nets.filter(n => !isNaN(n));
+          if (valid.length === 0) return 0;
+          return valid.reduce((a,b)=>a+b,0) / valid.length;
+        };
+        const eLabels = exams.map(e => e.title || 'Sınav');
+        const studentData = exams.map(e => Number(e.results?.[student.id]?.net || 0));
+        const classAvgs = exams.map(e => classAvgForExam(e));
+        const studentColors = studentData.map((v,i) => (v < classAvgs[i] ? 'rgba(220,38,38,0.85)' : 'rgba(99,102,241,0.9)'));
+        const classColors = classAvgs.map(_=>'rgba(148,163,184,0.4)');
+
+        if (examChart.current) { try { examChart.current.destroy(); } catch{} examChart.current = null; }
+        if (examCanvasRef.current) {
+          examChart.current = new Chart(examCanvasRef.current, {
+            type: 'bar',
+            data: {
+              labels: eLabels,
+              datasets: [
+                { label: student.name, data: studentData, backgroundColor: studentColors },
+                { label: 'Sınıf Ortalaması', data: classAvgs, backgroundColor: classColors }
+              ]
+            },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'top' } }, scales:{ y:{ beginAtZero:true } } }
+          });
+        }
+
+        return () => {
+          if (pointsChart.current) { try { pointsChart.current.destroy(); } catch{} pointsChart.current = null; }
+          if (examChart.current) { try { examChart.current.destroy(); } catch{} examChart.current = null; }
+        };
+      }, [student, students, exams]);
+
+      const handleAdd = () => {
+        const v = parseInt(manual, 10);
+        if (!isNaN(v) && v !== 0) { onAddLog(student.id, 'MANUEL', v, 'Dışarıdan Giriş'); setManual(''); }
+      };
+
+      const handleReset = () => {
+        if (!confirm(`${student.name} için puanlar sıfırlanacak. Onaylıyor musunuz?`)) return;
+        onResetPoints && onResetPoints(student.id);
+      };
+
+      const handleRestore = () => {
+        if (!confirm(`${student.name} için daha önce alınmış sıfırlama yedeği geri yüklenecekse onaylıyor musunuz?`)) return;
+        onRestorePoints && onRestorePoints(student.id);
+      };
+
+      const getChartImage = async (chartRef, fallbackCanvas) => {
+        try {
+          if (chartRef && chartRef.current && typeof chartRef.current.toBase64Image === 'function') return chartRef.current.toBase64Image();
+        } catch {}
+        const canvas = fallbackCanvas;
+        if (!canvas) return null;
+        for (let i=0;i<8;i++) {
+          try { return canvas.toDataURL('image/png'); } catch(e) { await new Promise(r=>setTimeout(r,150)); }
+        }
+        return null;
+      };
+
+      const handlePrintReport = async () => {
+        const pData = await getChartImage(pointsChart, pointsCanvasRef.current);
+        const eData = await getChartImage(examChart, examCanvasRef.current);
+
+        const reportHtml = `
+          <!doctype html><html><head><meta charset="utf-8"><title>${student.name} - Gelişim</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+          <style>body{font-family:Poppins,system-ui;margin:20px;color:#0f172a} .card{background:#fff;border-radius:10px;padding:12px;margin-top:12px;box-shadow:0 8px 24px rgba(2,6,23,0.06)} h1{margin:0}</style></head><body>
+          <h1>${student.name} — Gelişim Karnesi</h1><div class="card"><strong>Toplam Puan:</strong> ${student.puan||0}</div>
+          <div class="card"><strong>Puan Trendi</strong>${pData?`<img src="${pData}" style="max-width:100%;height:auto;margin-top:8px;border-radius:8px">`:'<div style="color:#64748b;margin-top:8px">Grafik yok</div>'}</div>
+          <div class="card"><strong>Deneme Performansı</strong>${eData?`<img src="${eData}" style="max-width:100%;height:auto;margin-top:8px;border-radius:8px">`:'<div style="color:#64748b;margin-top:8px">Grafik yok</div>'}</div>
+          <div class="card"><strong>Puan Hareketleri</strong><table style="width:100%;margin-top:8px;border-collapse:collapse">${(student.logs||[]).map(l=>`<tr><td style="padding:6px;border-bottom:1px solid #e6eef6">${(new Date(l.date)).toLocaleString('tr-TR')}</td><td style="padding:6px;border-bottom:1px solid #e6eef6">${l.reason}</td><td style="padding:6px;border-bottom:1px solid #e6eef6">${l.amount>0?`+${l.amount}`:l.amount} P</td></tr>`).join('')}</table></div>
+          <div style="margin-top:12px"><button onclick="window.print()" style="padding:10px 14px;border-radius:8px;background:#6366f1;color:white;border:none;font-weight:700;cursor:pointer">Yazdır / PDF</button></div>
+          </body></html>
+        `;
+const w = window.open('', '_blank', 'noopener,noreferrer'); if (!w) { alert('Yeni pencere açma engellendi. Pop-up izinlerini kontrol edin.'); return; } w.document.open(); w.document.write(reportHtml); w.document.close(); w.focus(); };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex items-start justify-center pt-12 p-4 overflow-y-auto" onClick={onClose}>
+          <div className="bg-white w-full max-w-5xl rounded-3xl p-6 shadow-2xl relative" onClick={(e)=>e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-2xl font-bold">{student.name} <span className="text-indigo-600">Gelişim Karnesi</span></h2>
+              <div className="flex items-center gap-3">
+                <button onClick={handlePrintReport} className="bg-indigo-600 text-white px-4 py-2 rounded-md font-bold">Raporu İndir / Yazdır</button>
+                <button onClick={handleReset} className="bg-rose-500 text-white px-4 py-2 rounded-md font-bold">Sıfırla Puan</button>
+                <button onClick={handleRestore} className="bg-slate-100 text-slate-800 px-4 py-2 rounded-md font-bold">Geri Al</button>
+                <button onClick={onClose} className="text-slate-400 hover:text-red-500 text-2xl">×</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+              <div className="p-4 bg-slate-900 text-white rounded-2xl text-center">
+                <div className="text-[10px] opacity-60 uppercase">TOPLAM PUAN</div>
+                <div className="text-4xl font-extrabold">{student.puan||0} P</div>
+                <div className="mt-2 level-badge">
+                  <span style={{fontSize:14}}>{avatarForLevel(getLevelFromPoints(student.puan||0))}</span>
+                  <span>Lv {getLevelFromPoints(student.puan||0)} · {labelForLevel(getLevelFromPoints(student.puan||0))}</span>
                 </div>
-                <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-1">
-                  {['students', 'exams', 'rank'].map(m => (
-                    <button 
-                      key={m} 
-                      onClick={() => setPage(m)}
-                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${page === m ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      {m === 'students' ? 'Öğrenciler' : m === 'exams' ? 'Sınavlar' : 'Sıralama'}
-                    </button>
+                <div className="mt-2 text-[11px] text-slate-400">Sonraki seviye: {getNextThreshold(student.puan||0)} P</div>
+              </div>
+              <div className="p-4 bg-indigo-50 rounded-2xl col-span-2">
+                <div className="flex gap-2">
+                  <input value={manual} onChange={(e)=>setManual(e.target.value)} className="w-full p-3 bg-white rounded-2xl text-center font-bold text-xl outline-none" placeholder="+ / -" />
+                  <button onClick={handleAdd} className="bg-indigo-600 text-white px-6 rounded-2xl font-bold">EKLE</button>
+                </div>
+                <div className="mt-3 text-xs text-slate-500">Manuel puan ekle / çıkar</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-4 rounded-2xl shadow chart-container">
+                <h4 className="text-sm font-bold text-indigo-600 mb-3">Puan Trendi</h4>
+                <div style={{height:'100%'}}><canvas ref={pointsCanvasRef} style={{width:'100%',height:'100%'}}/></div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl shadow chart-container">
+                <h4 className="text-sm font-bold text-indigo-600 mb-3">Deneme Performansı (Netler ve Sınıf Ortalaması)</h4>
+                <div style={{height:'100%'}}><canvas ref={examCanvasRef} style={{width:'100%',height:'100%'}}/></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-white p-3 rounded-2xl shadow">
+                <h5 className="text-xs font-bold text-indigo-600 mb-2">Puan Hareketleri</h5>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {(student.logs || []).map((l,i) => (
+                    <div key={i} className="flex justify-between items-center p-2 rounded bg-slate-50 text-xs font-bold">
+                      <div><div className="text-[10px] text-slate-400">{safeFormatDate(l.date)}</div>{l.reason}</div>
+                      <div className={l.amount>0 ? 'text-emerald-500' : 'text-rose-500'}>{l.amount>0?`+${l.amount}`:l.amount} P</div>
+                    </div>
                   ))}
+                  {(student.logs || []).length === 0 && <p className="text-center text-slate-400">Henüz kayıt yok</p>}
                 </div>
-              </nav>
+              </div>
 
-              <main className="p-8 max-w-7xl mx-auto">
-                {page === 'students' && (
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-4 mb-6 flex gap-4">
-                        <input id="newStd" className="flex-1 bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all" placeholder="Öğrenci Adı Soyadı..." />
-                        <button onClick={() => {
-                            const val = document.getElementById('newStd').value;
-                            if(val) { saveStudents([...students, {id: generateId(), name: sanitize(val), puan: 0, logs: []}]); document.getElementById('newStd').value = ''; }
-                        }} className="bg-indigo-600 text-white px-8 rounded-2xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
-                            <Plus size={20} /> Ekle
-                        </button>
-                    </div>
-                    {students.map(s => (
-                      <div key={s.id} onClick={() => setDetailStudent(s)} className="bg-slate-50 p-6 rounded-3xl border-2 border-transparent hover:border-indigo-100 hover:bg-white hover:shadow-xl transition-all cursor-pointer group">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 font-bold">
-                                {s.name[0].toUpperCase()}
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); saveStudents(students.filter(x => x.id !== s.id)); }} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
-                        <h4 className="font-bold text-slate-800 truncate">{s.name}</h4>
-                        <p className="text-indigo-600 font-extrabold mt-1">{s.puan || 0} Puan</p>
+              <div className="bg-white p-3 rounded-2xl shadow">
+                <h5 className="text-xs font-bold text-indigo-600 mb-2">Deneme Özeti</h5>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {exams.map(e => (
+                    <div key={e.id} className="flex justify-between items-center p-2 rounded bg-slate-50 text-xs font-bold">
+                      <div>{e.title}</div>
+                      <div className="text-right">
+                        <div className="text-slate-900">{(e.results?.[student.id]?.net || 0).toFixed(2)} Net</div>
+                        <div className="text-orange-500 text-[11px]">%{(((e.results?.[student.id]?.net || 0) / e.qCount) * 100).toFixed(0)} Başarı</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {page === 'rank' && (
-                  <div className="space-y-4 max-w-2xl mx-auto">
-                    {students.sort((a,b) => (b.puan || 0) - (a.puan || 0)).map((s, i) => (
-                      <div key={s.id} className="bg-white p-6 rounded-3xl shadow-lg border border-slate-100 flex justify-between items-center">
-                        <div className="flex items-center gap-6">
-                            <span className={`text-2xl font-black ${i < 3 ? 'text-amber-500' : 'text-slate-200'}`}>#{i+1}</span>
-                            <span className="text-lg font-bold text-slate-700">{s.name}</span>
-                        </div>
-                        <div className="text-2xl font-black text-indigo-600">{s.puan || 0}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </nav>
-
-              {/* Öğrenci Detay Modalı - v13 Grafik Dahil */}
-              {detailStudent && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-800">{detailStudent.name}</h2>
-                                <p className="text-indigo-600 font-bold">Performans Analizi</p>
-                            </div>
-                            <button onClick={() => setDetailStudent(null)} className="p-3 bg-slate-100 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
-                                <X />
-                            </button>
-                        </div>
-                        <div className="p-8 overflow-y-auto custom-scrollbar">
-                            <h3 className="text-lg font-bold text-slate-700 mb-4">Sınav Başarı Grafiği (%)</h3>
-                            <HybridChart stdId={detailStudent.id} students={students} exams={exams} />
-                            
-                            <div className="mt-8 grid grid-cols-2 gap-4">
-                                <div className="p-6 bg-indigo-50 rounded-3xl">
-                                    <p className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Mevcut Puan</p>
-                                    <p className="text-4xl font-black text-indigo-600">{detailStudent.puan || 0}</p>
-                                </div>
-                                <div className="p-6 bg-slate-50 rounded-3xl flex flex-col justify-center">
-                                    <div className="flex gap-2">
-                                        <input id="quickPuan" type="number" className="w-full p-3 rounded-xl border-2 border-slate-200 outline-none focus:border-indigo-500" placeholder="Puan ekle/çıkar..." />
-                                        <button onClick={() => {
-                                            const val = document.getElementById('quickPuan').value;
-                                            if(val) addLog(detailStudent.id, 'MANUEL', val, 'Hızlı İşlem');
-                                            setDetailStudent(null);
-                                        }} className="bg-slate-900 text-white px-6 rounded-xl font-bold">Uygula</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
+                  ))}
+                  {exams.length === 0 && <p className="text-center text-slate-400">Henüz sınav yok</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <VeliMesaji student={student} exams={exams} students={students} />
+            </div>
+
+            <div className="mt-6">
+              <BadgesPanel badges={BADGES} studentBadges={(student.badges || []).map(b=> typeof b === 'string' ? b : b.id)} onInspect={(b)=>alert(`${b.name}\n\n${b.description}`)} />
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    // ==================== BACKUP UTILITIES ====================
+    const makeBackup = (classes) => {
+      const data = { version:16, created: new Date().toISOString(), classes, payload:{} };
+      (classes || []).forEach(c => {
+        const students = storage.get(`s13_${c.id}`, []);
+        const homeworks = storage.get(`h13_${c.id}`, []);
+        const exams = storage.get(`e13_${c.id}`, []);
+        data.payload[c.id] = { students, homeworks, exams };
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = `asistanv16_backup_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.json`; 
+      document.body.appendChild(a); 
+      a.click(); 
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    // ==================== V16: BACKUP RESTORE (v13/v14/v15/v16 geriye dönük uyumlu) ====================
+    const restoreFromBackupFile = async (file) => {
+      try {
+        const text = await file.text(); 
+        const parsed = JSON.parse(text);
+        if (!parsed || !parsed.classes) throw new Error('Geçersiz yedek dosyası');
+        const fileVersion = parsed.version || 13;
+        if (!confirm(`V${fileVersion} yedek dosyası yüklenecek. Mevcut veriler üzerine yazılacak. Devam edilsin mi?`)) return { success:false, message:'Kullanıcı iptal etti' };
+        storage.set('ap_v13_classes', parsed.classes);
+        parsed.classes.forEach(c => {
+          const payload = parsed.payload?.[c.id] || { students:[], homeworks:[], exams:[] };
+          storage.set(`s13_${c.id}`, payload.students || []);
+          storage.set(`h13_${c.id}`, payload.homeworks || []);
+          storage.set(`e13_${c.id}`, payload.exams || []);
+        });
+        return { success:true, parsed };
+      } catch (e) { 
+        console.error(e); 
+        return { success:false, message: e.message || 'Hata' }; 
+      }
+    };
+
+    // ==================== V16: RANK PAGE (Sınıf Seviyesi Karşılaştırması) ====================
+    function RankPage({ students, classes, selClass, rankMode, setRankMode, rankingData, getWeeklyPointsForStudent, setDetailStudent, storage }) {
+      // Sınıf adından seviye grubu çıkar: "6-A", "6B", "6. Sınıf A" → "6"
+      function extractGradeGroup(name = '') {
+        const m = name.match(/(\d{1,2})/);
+        return m ? m[1] : null;
+      }
+
+      const currentGrade = extractGradeGroup(selClass?.name || '');
+
+      // Aynı seviyedeki diğer sınıfları bul
+      const sameGradeClasses = classes.filter(c => {
+        const g = extractGradeGroup(c.name);
+        return g === currentGrade;
+      });
+
+      const [compareClassId, setCompareClassId] = useState('__current__');
+
+      // Karşılaştırma sınıfının öğrencilerini yükle
+      const [compareStudents, setCompareStudents] = useState([]);
+      useEffect(() => {
+        if (compareClassId === '__current__') {
+          setCompareStudents(students);
+        } else {
+          const loaded = storage.get(`s13_${compareClassId}`, []);
+          setCompareStudents(loaded);
+        }
+      }, [compareClassId, students]);
+
+      // Seçili moda göre sırala
+      const displayStudents = [...compareStudents].sort((a, b) => {
+        if (rankMode === 'weekly') {
+          return getWeeklyPointsForStudent(b) - getWeeklyPointsForStudent(a);
+        }
+        return (b.puan || 0) - (a.puan || 0);
+      });
+
+      const selectedClassName = compareClassId === '__current__'
+        ? (selClass?.name || 'Sınıf')
+        : (classes.find(c => c.id === compareClassId)?.name || '');
+
+      return (
+        <div className="max-w-4xl mx-auto space-y-4 pt-10">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-3xl font-bold">Liderlik Tablosu</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Zaman modu */}
+              <button onClick={() => setRankMode('weekly')} className={`px-3 py-1 rounded-lg font-bold text-sm ${rankMode==='weekly' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>Haftalık</button>
+              <button onClick={() => setRankMode('all')} className={`px-3 py-1 rounded-lg font-bold text-sm ${rankMode==='all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>Genel</button>
+
+              {/* Sınıf karşılaştırma dropdown */}
+              {sameGradeClasses.length > 1 && (
+                <div className="flex items-center gap-2 ml-2 border-l pl-3">
+                  <span className="text-xs text-slate-500 font-bold">Sınıf:</span>
+                  <select
+                    value={compareClassId}
+                    onChange={e => setCompareClassId(e.target.value)}
+                    className="px-3 py-1 rounded-lg border-2 border-indigo-200 font-bold text-sm outline-none focus:border-indigo-500 bg-white">
+                    <option value="__current__">{selClass?.name} (Bu Sınıf)</option>
+                    {sameGradeClasses.filter(c => c.id !== selClass?.id).map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
-          );
-        }
+          </div>
 
-        // Uygulamayı başlat
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(
-          <ErrorBoundary>
-            <App />
-          </ErrorBoundary>
-        );
-    </script>
+          {/* Karşılaştırma başlığı */}
+          {compareClassId !== '__current__' && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-3 text-center text-sm font-bold text-indigo-700">
+              📊 {selectedClassName} sınıfının sıralaması gösteriliyor
+              <button onClick={() => setCompareClassId('__current__')} className="ml-3 text-xs text-indigo-400 hover:text-indigo-600 underline">Kendi sınıfıma dön</button>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {displayStudents.map((s, i) => {
+              const lvl = getLevelFromPoints(s.puan || 0);
+              const pts = rankMode === 'weekly' ? getWeeklyPointsForStudent(s) : (s.puan || 0);
+              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+              return (
+                <div key={s.id} onClick={() => compareClassId === '__current__' && setDetailStudent(s)}
+                  className={`bg-white p-4 rounded-2xl shadow flex items-center justify-between transition-all ${compareClassId === '__current__' ? 'cursor-pointer hover:scale-[1.01]' : ''} ${i < 3 ? 'border-l-4 border-indigo-500' : ''}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="text-2xl font-extrabold text-slate-400 min-w-[40px] text-center">
+                      {medal || `#${i+1}`}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-700">{s.name}</div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1">
+                        <span>{avatarForLevel(lvl)}</span>
+                        <span>{labelForLevel(lvl)} · Lv {lvl}</span>
+                        <span className="opacity-50">·</span>
+                        <span>{s.badges?.length || 0} rozet</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-indigo-600">{pts} P</div>
+                    <div className="text-xs text-slate-400">{rankMode === 'weekly' ? 'Son 7 gün' : 'Genel'}</div>
+                  </div>
+                </div>
+              );
+            })}
+            {displayStudents.length === 0 && (
+              <div className="text-center py-12 text-slate-400"><p>Bu sınıfta henüz öğrenci yok</p></div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== MAIN APP ====================
+    function App() {
+      const [page, setPage] = useState('dashboard');
+      const [classes, setClasses] = useLocalStorageState('ap_v13_classes', []);
+      const [selClass, setSelClass] = useState(null);
+      const [students, setStudents] = useState([]);
+      const [homeworks, setHomeworks] = useState([]);
+      const [exams, setExams] = useState([]);
+      const [drawnStudents, setDrawnStudents] = useState([]);
+      const [detailStudent, setDetailStudent] = useState(null);
+      const fileInputRef = useRef(null);
+
+      const [levelFlashIds, setLevelFlashIds] = useState([]);
+      const [examTimer, setExamTimer] = useLocalStorageState('exam_timer', { running:false, examId:'', label:'', remaining:0, paused:false, lastUpdated: Date.now(), classId: null });
+      const [rankMode, setRankMode] = useState('weekly');
+
+      useAutoBackup(classes);
+
+      useEffect(()=> {
+        if (selClass) {
+          setStudents(storage.get(`s13_${selClass.id}`, []));
+          setHomeworks(storage.get(`h13_${selClass.id}`, []));
+          setExams(storage.get(`e13_${selClass.id}`, []));
+         setDrawnStudents(storage.get(`draw13_${selClass.id}`, []));
+        } else { 
+          setStudents([]); 
+          setHomeworks([]); 
+          setExams([]); 
+          setDrawnStudents([]); 
+        }
+      }, [selClass]);
+
+      const awardBadge = useCallback((studentId, badgeId) => {
+        if (!selClass) return;
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            if (s.id === studentId) {
+              const existing = (s.badges || []).map(b => typeof b === 'string' ? b : b.id);
+              if (existing.includes(badgeId)) return s;
+              const newBadges = [...(s.badges || []), { id: badgeId, earnedAt: new Date().toISOString() }];
+              return { ...s, badges: newBadges };
+            }
+            return s;
+          });
+          storage.set(`s13_${selClass.id}`, updated);
+          if (detailStudent?.id) {
+            const ds = updated.find(x => x.id === detailStudent.id);
+            if (ds) setDetailStudent(ds);
+          }
+          return updated;
+        });
+      }, [selClass, detailStudent]);
+
+      const awardBadgeToAllStudents = useCallback((badgeId) => {
+        if (!selClass) return;
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            const existing = (s.badges || []).map(b => typeof b === 'string' ? b : b.id);
+            if (existing.includes(badgeId)) return s;
+            return { ...s, badges: [...(s.badges||[]), { id: badgeId, earnedAt: new Date().toISOString() }] };
+          });
+          storage.set(`s13_${selClass.id}`, updated);
+          return updated;
+        });
+      }, [selClass]);
+
+      const computeHomeworkStreakForStudent = useCallback((studentId, count) => {
+        if (!Array.isArray(homeworks) || homeworks.length === 0) return 0;
+        const last = [...homeworks].slice(-count);
+        let streak = 0;
+        for (let i = last.length - 1; i >=0; i--) {
+          const res = last[i].results?.[studentId];
+          if (res === 'done') streak++; else break;
+        }
+        return streak;
+      }, [homeworks]);
+
+      const handleCheckHomeworkBadgesForStudent = useCallback((studentId) => {
+        BADGES.filter(b => b.trigger === 'homework_streak').forEach(b => {
+          const need = b.conditions.count;
+          const streak = computeHomeworkStreakForStudent(studentId, need);
+          if (streak >= need) awardBadge(studentId, b.id);
+        });
+      }, [computeHomeworkStreakForStudent, awardBadge]);
+
+      const handleWheelSelected = useCallback((studentId) => {
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            if (s.id === studentId) {
+              const wc = (s.wheelCount || 0) + 1;
+              return { ...s, wheelCount: wc };
+            }
+            return s;
+          });
+          if (selClass) storage.set(`s13_${selClass.id}`, updated);
+          updated.forEach(s => {
+            if (s.id === studentId && (s.wheelCount || 0) >= 5) awardBadge(studentId, 'wheel_selected_5');
+          });
+          return updated;
+        });
+      }, [awardBadge, selClass]);
+
+      const getWeeklyPointsForStudent = useCallback((s) => {
+        if (!s || !Array.isArray(s.logs)) return 0;
+        const now = Date.now();
+        const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+        return s.logs.reduce((sum, l) => {
+          try {
+            const t = new Date(l.date).getTime();
+            if (!isNaN(t) && t >= weekAgo) return sum + Number(l.amount || 0);
+          } catch(e){}
+          return sum;
+        }, 0);
+      }, []);
+
+      const addLog = useCallback((stdId, type, amount, reason) => {
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            if (s.id === stdId) {
+              const oldP = Number(s.puan) || 0;
+              const newP = oldP + Number(amount);
+              const newLog = { date: new Date().toISOString(), type, amount: Number(amount), reason: sanitize(reason), currentTotal: newP };
+              const oldLvl = getLevelFromPoints(oldP);
+              const newLvl = getLevelFromPoints(newP);
+              if (newLvl > oldLvl) {
+                try { playLevelUpSound(); } catch {}
+                setLevelFlashIds(prevIds => {
+                  if (prevIds.includes(s.id)) return prevIds;
+                  setTimeout(()=> setLevelFlashIds(ids => ids.filter(id => id !== s.id)), 2600);
+                  return [...prevIds, s.id];
+                });
+              }
+              return { ...s, puan:newP, logs: [ newLog, ...(s.logs || []) ] };
+            }
+            return s;
+          });
+          if (selClass) storage.set(`s13_${selClass.id}`, updated);
+          if (detailStudent?.id === stdId) setDetailStudent(updated.find(x => x.id === stdId));
+          try {
+            if (type === 'ÖDEV') {
+              handleCheckHomeworkBadgesForStudent(stdId);
+            }
+          } catch (e) { console.error(e); }
+          return updated;
+        });
+      }, [selClass, detailStudent, handleCheckHomeworkBadgesForStudent]);
+
+      const saveStudents = useCallback((newStudents) => { 
+        setStudents(newStudents); 
+        if (selClass) storage.set(`s13_${selClass.id}`, newStudents); 
+      }, [selClass]);
+
+      const saveHomeworks = useCallback((newHomeworks) => {
+        setHomeworks(newHomeworks); 
+        if (selClass) storage.set(`h13_${selClass.id}`, newHomeworks);
+        students.forEach(s => {
+          BADGES.filter(b => b.trigger === 'homework_streak').forEach(b => {
+            const need = b.conditions.count;
+            const last = [...newHomeworks].slice(-need);
+            let streak = 0;
+            for (let i = last.length - 1; i >=0; i--) {
+              const res = last[i].results?.[s.id];
+              if (res === 'done') streak++; else break;
+            }
+            if (streak >= need) awardBadge(s.id, b.id);
+          });
+        });
+      }, [selClass, students, awardBadge]);
+
+      const saveExams = useCallback((newExams) => {
+        setExams(newExams); 
+        if (selClass) storage.set(`e13_${selClass.id}`, newExams);
+        setTimeout(()=> {
+          if (Array.isArray(newExams) && newExams.length > 0) {
+            const lastExam = newExams[newExams.length-1];
+
+
+// ==================== EXAM POINT SYSTEM (Top 10) ====================
+const ranking = [...students]
+  .map(s => ({
+    id: s.id,
+    net: Number(lastExam.results?.[s.id]?.net || 0)
+  }))
+  .sort((a, b) => b.net - a.net);
+
+// İlk 10 kişiye puan ver (10 → 1)
+
+            const prevExam = newExams[newExams.length-2];
+            students.forEach(s => {
+              const latestNet = Number(lastExam.results?.[s.id]?.net || 0);
+              if (prevExam) {
+                const prevNet = Number(prevExam.results?.[s.id]?.net || 0);
+                if (prevNet > 0) {
+                  const percent = ((latestNet - prevNet) / Math.abs(prevNet)) * 100;
+                  if (percent >= 20) awardBadge(s.id, 'exam_improve_20');
+                }
+              }
+              const qCount = Number(lastExam.qCount || 0);
+              if (qCount > 0) {
+                const percentOfTotal = (latestNet / qCount) * 100;
+                if (percentOfTotal >= 95) awardBadge(s.id, 'perfect_exam');
+              }
+            });
+          }
+        }, 120);
+      }, [selClass, students, awardBadge, addLog]);
+
+
+      const handleAddClass = () => { 
+        const name = prompt('Sınıf Adı:'); 
+        const cleaned = sanitize(name); 
+        if (cleaned) { 
+          setClasses([...classes, { id: generateId(), name: cleaned }]); 
+        } 
+      };
+
+      const handleDeleteClass = (id) => { 
+        if (!confirm('Bu sınıf silinecek. Emin misiniz?')) return; 
+        setClasses(classes.filter(c=>c.id!==id)); 
+        storage.remove(`s13_${id}`); 
+        storage.remove(`h13_${id}`); 
+        storage.remove(`e13_${id}`); 
+        if (selClass?.id===id) { 
+          setSelClass(null); 
+          setPage('dashboard'); 
+        } 
+      };
+
+      const handleAddStudent = (name) => {
+        const s = { id: generateId(), name, puan:0, logs:[], badges:[], wheelCount:0 };
+        saveStudents([...students, s]);
+      };
+
+      const handleAddBulkStudents = (names) => {
+        const newOnes = names.map(n=>({ id: generateId(), name:n, puan:0, logs:[], badges:[], wheelCount:0 }));
+        saveStudents([...students, ...newOnes]);
+      };
+
+      const handleDeleteStudent = (id) => { 
+        if (!confirm('Bu öğrenci silinecek. Emin misiniz?')) return; 
+        saveStudents(students.filter(s=>s.id!==id)); 
+      };
+
+      const handleBackup = () => makeBackup(classes);
+      const handleRestoreClick = () => fileInputRef.current?.click();
+      const handleFileChange = async (ev) => {
+        const file = ev.target.files?.[0]; 
+        if (!file) return;
+        const res = await restoreFromBackupFile(file);
+        if (res.success) { 
+          setClasses(res.parsed.classes); 
+          if (res.parsed.classes.length>0) setSelClass(res.parsed.classes[0]); 
+          alert('Yedek başarıyla yüklendi.'); 
+        } else { 
+          alert('Yedek yüklenemedi: ' + (res.message || 'Hata')); 
+        }
+        ev.target.value = '';
+      };
+
+      const handleRemoveStudent = (id) => saveStudents(students.filter(s=>s.id!==id));
+
+      const incrementClassSilencePoints = useCallback((amount = 1) => {
+        if (!selClass) return;
+        const key = `class_silence_${selClass.id}`;
+        const cur = storage.get(key, 0) || 0;
+        const nv = cur + amount;
+        storage.set(key, nv);
+        const silenceBadge = BADGES.find(b => b.id === 'silence_master');
+        if (silenceBadge && nv >= (silenceBadge.conditions.points || 50)) {
+          awardBadgeToAllStudents('silence_master');
+          storage.set(key, 0);
+          alert('Sessizlik hedefi aşıldı — tüm öğrencilere "Sessizlik Şampiyonu" rozetleri verildi!');
+        }
+      }, [selClass, awardBadgeToAllStudents]);
+
+      useEffect(()=> {
+        let id = null;
+        if (examTimer && examTimer.running) {
+          id = setInterval(()=> {
+            setExamTimer(prev => {
+              if (!prev || !prev.running) return prev;
+              const now = Date.now();
+              const elapsed = Math.round((now - (prev.lastUpdated || now)) / 1000);
+              const remaining = Math.max(0, (prev.remaining || 0) - elapsed);
+              if (remaining <= 0) {
+                try { playFinalSound(); } catch {}
+                alert(`${prev.label} sınav zamanlayıcısı bitti!`);
+                return { running:false, examId:'', label:'', remaining:0, paused:false, lastUpdated: now, classId: null };
+              }
+              return { ...prev, remaining, lastUpdated: now };
+            });
+          }, 800);
+        }
+        return ()=> { if (id) clearInterval(id); };
+      }, [examTimer && examTimer.running]);
+
+      function startExamTimer(examId, label, seconds) {
+        if (!selClass) { alert('Önce sınıf seçin'); return; }
+        setExamTimer({ running:true, examId, label, remaining: seconds, paused:false, lastUpdated: Date.now(), classId: selClass.id });
+      }
+      function pauseExamTimer() {
+        setExamTimer(prev => {
+          if (!prev || !prev.running) return prev;
+          const now = Date.now();
+          const elapsed = Math.round((now - (prev.lastUpdated || now)) / 1000);
+          const newRemaining = Math.max(0, (prev.remaining || 0) - elapsed);
+          return { ...prev, running:false, paused:true, remaining:newRemaining, lastUpdated: now };
+        });
+      }
+      function resumeExamTimer() {
+        setExamTimer(prev => {
+          if (!prev || !prev.paused) return prev;
+          return { ...prev, running:true, paused:false, lastUpdated: Date.now() };
+        });
+      }
+      function stopExamTimer() {
+        setExamTimer({ running:false, examId:'', label:'', remaining:0, paused:false, lastUpdated: Date.now(), classId: null });
+      }
+      const formatSec = (s) => { const m = String(Math.floor(s/60)).padStart(2,'0'); const sec = String(s%60).padStart(2,'0'); return `${m}:${sec}`; };
+
+      const rankingData = useCallback(() => {
+        if (!Array.isArray(students)) return [];
+        if (rankMode === 'weekly') {
+          return [...students].map(s => ({ ...s, weeklyPoints: getWeeklyPointsForStudent(s) }))
+            .sort((a,b) => (b.weeklyPoints || 0) - (a.weeklyPoints || 0));
+        }
+        return [...students].sort((a,b) => (b.puan||0) - (a.puan||0));
+      }, [students, rankMode, getWeeklyPointsForStudent]);
+
+      function resetStudentPoints(studentId) {
+        if (!selClass) return;
+        const key = `reset_backup_${selClass.id}_${studentId}`;
+        const cur = students.find(s => s.id === studentId);
+        if (!cur) return;
+        storage.set(key, cur);
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            if (s.id === studentId) {
+              const oldP = Number(s.puan) || 0;
+              const newLog = { date: new Date().toISOString(), type: 'SIFIRLAMA', amount: -oldP, reason: 'Puan sıfırlama', currentTotal: 0 };
+              return { ...s, puan: 0, logs: [ newLog, ...(s.logs || []) ] };
+            }
+            return s;
+          });
+          storage.set(`s13_${selClass.id}`, updated);
+          if (detailStudent?.id === studentId) setDetailStudent(updated.find(x => x.id === studentId));
+          return updated;
+        });
+      }
+      function restoreStudentPoints(studentId) {
+        if (!selClass) return;
+        const key = `reset_backup_${selClass.id}_${studentId}`;
+        const bak = storage.get(key, null);
+        if (!bak) { alert('Geri alınacak bir yedek bulunamadı.'); return; }
+        setStudents(prev => {
+          const updated = prev.map(s => s.id === studentId ? bak : s);
+          storage.set(`s13_${selClass.id}`, updated);
+          storage.remove(key);
+          if (detailStudent?.id === studentId) setDetailStudent(updated.find(x => x.id === studentId));
+          return updated;
+        });
+      }
+
+      function resetClassPoints() {
+        if (!selClass) return;
+        if (!confirm(`Tüm öğrencilerin puanları sıfırlanacak — ${selClass.name}. Devam edilsin mi?`)) return;
+        const key = `reset_backup_class_${selClass.id}`;
+        storage.set(key, students);
+        setStudents(prev => {
+          const updated = prev.map(s => {
+            const oldP = Number(s.puan) || 0;
+            const newLog = { date: new Date().toISOString(), type: 'SINIF_SIFIRLAMA', amount: -oldP, reason: 'Sınıf puan sıfırlama', currentTotal: 0 };
+            return { ...s, puan: 0, logs: [ newLog, ...(s.logs || []) ] };
+          });
+          storage.set(`s13_${selClass.id}`, updated);
+          return updated;
+        });
+        alert('Sınıf puanları sıfırlandı ve yedeklendi.');
+      }
+      function restoreClassPoints() {
+        if (!selClass) return;
+        const key = `reset_backup_class_${selClass.id}`;
+        const bak = storage.get(key, null);
+        if (!bak) { alert('Sınıf yedeği bulunamadı.'); return; }
+        if (!confirm('Sınıf yedeği geri yüklenecek. Mevcut puanlar üzerine yazılacak. Onaylıyorsanız devam edin.')) return;
+        setStudents(bak);
+        storage.set(`s13_${selClass.id}`, bak);
+        storage.remove(key);
+        alert('Sınıf puanları geri yüklendi.');
+      }
+
+      function manualAddForStudent(studentId, amount) {
+        addLog(studentId, 'MANUEL', amount, 'Hızlı Manuel (Listeden)');
+      }
+
+      useEffect(()=> {
+        if (!classes || classes.length === 0) {
+          const sample = [{ id:'c_demo', name:'7-A' }];
+          setClasses(sample);
+          storage.set('ap_v13_classes', sample);
+          const studs = [
+            { id:'s1', name:'Ayşe', puan:95, logs:[], badges:[], wheelCount:0 },
+            { id:'s2', name:'Emre', puan:120, logs:[], badges:[], wheelCount:0 },
+            { id:'s3', name:'Zeynep', puan:215, logs:[], badges:[], wheelCount:0 }
+          ];
+          storage.set('s13_c_demo', studs);
+        }
+      }, []);
+
+      return (
+        <ErrorBoundary>
+          <div className="min-h-screen">
+            <nav className="bg-gradient-to-r from-slate-900 to-indigo-900 text-white p-4 flex justify-between items-center border-b-4 border-indigo-600">
+              <div className="flex items-center gap-4">
+                <h1 onClick={()=>{ setPage('dashboard'); setSelClass(null); }} className="text-xl font-bold cursor-pointer flex items-center gap-2">Asistan <span style={{color:'#a78bfa'}}>Pro V16</span></h1>
+                <div className="hidden md:flex items-center gap-3 text-sm text-slate-200">
+                  <span className="opacity-80">Sınıf: </span>
+                  {selClass ? <span className="bg-indigo-600 px-3 py-1 rounded text-xs font-bold">{selClass.name}</span> : <span className="text-slate-400">Henüz seçili değil</span>}
+                </div>
+              </div>
+
+              <div className="nav-action">
+                <button onClick={handleBackup} title="Yedekle" className="bg-indigo-500 hover:bg-indigo-400 small-btn text-white flex items-center gap-2"><Download className="w-4 h-4" /> Yedekle</button>
+                <button onClick={handleRestoreClick} title="Yedekten Yükle" className="bg-white/10 hover:bg-white/20 small-btn text-white flex items-center gap-2"><Upload className="w-4 h-4" /> Yükle</button>
+                <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} className="hidden" />
+              </div>
+            </nav>
+
+            <main className="p-6 max-w-7xl mx-auto">
+              {page==='dashboard' && <Dashboard classes={classes} onAddClass={handleAddClass} onSelectClass={(c)=>{ setSelClass(c); setPage('list'); }} onDeleteClass={handleDeleteClass} />}
+
+              {selClass && (
+                <>
+                  <div className="flex flex-wrap gap-2 p-2 bg-white rounded-2xl w-fit shadow-sm border mx-auto md:mx-0 mb-6">
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='list' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('list')}>Öğrenci</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='hw' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('hw')}>Ödev</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='wheel' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('wheel')}>Kura</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='exam' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('exam')}>Sınav</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='stats' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('stats')}>Analiz</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='rank' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('rank')}>Liderlik</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='daily' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('daily')}>Günün Sorusu</button>
+                    <button className={`px-3 py-2 rounded-xl font-bold text-xs ${page==='tools' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`} onClick={()=>setPage('tools')}>Araçlar</button>
+                  </div>
+
+                  {page==='list' && <StudentList students={students} onAddStudent={handleAddStudent} onAddBulk={handleAddBulkStudents} onDeleteStudent={handleDeleteStudent} levelFlashIds={levelFlashIds} onManualAdd={manualAddForStudent} />}
+
+                  {page==='hw' && <HomeworkManager students={students} homeworks={homeworks} onSaveHomeworks={saveHomeworks} onAddLog={addLog} />}
+
+                  {page==='wheel' && <NameScroller students={students} drawnStudents={drawnStudents} onDraw={(id)=>{ 
+  setDrawnStudents(prev=>{ 
+    const updated = [...prev, id];
+    storage.set(`draw13_${selClass.id}`, updated);
+    return updated;
+  }); 
+  handleWheelSelected(id); 
+}}
+
+onReset={()=>{
+  setDrawnStudents([]);
+  storage.set(`draw13_${selClass.id}`, []);
+}}
+
+onAddLog={addLog} onRemoveStudent={handleRemoveStudent} />}
+
+{page==='exam' && (
+  <ExamManager
+    students={students}
+    exams={exams}
+    onSaveExams={saveExams}
+    onStartExamTimer={startExamTimer}
+    onAddLog={addLog}
+  />
+)}
+
+                  {page==='stats' && <StatsPage students={students} exams={exams} onShowDetail={setDetailStudent} />}
+
+                  {page==='rank' && (
+                    <RankPage
+                      students={students}
+                      classes={classes}
+                      selClass={selClass}
+                      rankMode={rankMode}
+                      setRankMode={setRankMode}
+                      rankingData={rankingData}
+                      getWeeklyPointsForStudent={getWeeklyPointsForStudent}
+                      setDetailStudent={setDetailStudent}
+                      storage={storage}
+                    />
+                  )}
+
+                  {page==='daily' && <DailyQuestions students={students} addLog={addLog} />}
+
+                  {page==='tools' && (
+                    <div className="max-w-3xl mx-auto space-y-6">
+                      <div className="text-center text-slate-700 font-bold mb-2">Sınıf Ses Ölçer (Sessizlik Puanları)</div>
+                      <SoundMeter threshold={0.08} initialGain={1.0} onAboveThreshold={(lvl)=>{ }} onBelowThreshold={(lvl)=>{ }} onClassSilenceIncrement={(amt) => { incrementClassSilencePoints(amt); }} />
+                      <div className="text-sm text-slate-500 mt-2">Sessizlik Puanları sınıf bazında toplanır; hedefe ulaştığında rozetler sınıfa verilir.</div>
+
+                      <div className="bg-white p-4 rounded-2xl shadow">
+                        <h4 className="text-sm font-bold text-indigo-600">Puan Yönetimi (Sınıf / Bireysel)</h4>
+                        <div className="mt-3 text-sm text-slate-600">Buradan tüm sınıfın puanlarını sıfırlayabilir veya önceden alınmış sınıf yedeğini geri yükleyebilirsiniz. Ayrıca sınıf içindeki bireysel yedeklerin de yönetimi StudentDetail içinden yapılır.</div>
+                        <div className="mt-4 flex gap-3">
+                          <button onClick={resetClassPoints} className="px-4 py-2 bg-rose-500 text-white rounded-md font-bold">Sınıfı Sıfırla (Yedekle)</button>
+                          <button onClick={restoreClassPoints} className="px-4 py-2 bg-indigo-600 text-white rounded-md font-bold">Sınıfı Geri Yükle</button>
+                        </div>
+                        <div className="mt-3 text-xs text-slate-400">Not: Sıfırlama işleminden önce mevcut öğrenci verileri localStorage'a yedeklenir.</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </main>
+
+            {detailStudent && <StudentDetail student={detailStudent} students={students} exams={exams} onClose={()=>setDetailStudent(null)} onAddLog={addLog} onResetPoints={resetStudentPoints} onRestorePoints={restoreStudentPoints} />}
+
+            {examTimer && (examTimer.running || examTimer.paused) && examTimer.classId === (selClass && selClass.id) && (
+              <div className="exam-overlay" role="status" aria-live="polite">
+                <div className="label">{examTimer.label} — Sınav</div>
+                <div className="time">{formatSec(examTimer.remaining)}</div>
+                <div className="controls">
+                  {examTimer.running ? (
+                    <button onClick={pauseExamTimer} className="px-3 py-1 rounded-md bg-white text-indigo-700 font-bold">Duraklat</button>
+                  ) : (
+                    <button onClick={resumeExamTimer} className="px-3 py-1 rounded-md bg-white text-indigo-700 font-bold">Sürdür</button>
+                  )}
+                  <button onClick={stopExamTimer} className="px-3 py-1 rounded-md bg-rose-500 text-white font-bold">Durdur</button>
+                </div>
+              </div>
+            )}
+
+            <LeaderboardScroller students={students} />
+          </div>
+        </ErrorBoundary>
+      );
+    }
+
+    // ==================== START ====================
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
